@@ -1,0 +1,86 @@
+[
+{
+    "fields": {
+        "content": "Don't cry because it's over, smile because it happened."
+    },
+    "model": "quotes.quote",
+    "pk": 1
+},
+{
+    "fields": {
+        "content": "I'm selfish, impatient and a little insecure. I make mistakes, I am out of control and at times hard to handle. But if you can't handle me at my worst, then you sure as hell don't deserve me at my best."
+    },
+    "model": "quotes.quote",
+    "pk": 2
+},
+{
+    "fields": {
+        "content": "Be yourself; everyone else is already taken."
+    },
+    "model": "quotes.quote",
+    "pk": 3
+},
+{
+    "fields": {
+        "content": "Be who you are and say what you feel, because those who mind don't matter, and those who matter don't mind."
+    },
+    "model": "quotes.quote",
+    "pk": 4
+},
+{
+    "fields": {
+        "content": "Two things are infinite: the universe and human stupidity; and I'm not sure about the universe."
+    },
+    "model": "quotes.quote",
+    "pk": 5
+},
+{
+    "fields": {
+        "content": "A room without books is like a body without a soul."
+    },
+    "model": "quotes.quote",
+    "pk": 6
+},
+{
+    "fields": {
+        "content": "In three words I can sum up everything I've learned about life: it goes on."
+    },
+    "model": "quotes.quote",
+    "pk": 7
+},
+{
+    "fields": {
+        "content": "Friendship is born at that moment when one man says to another: \"What! You too? I thought that no one but myself . . .\""
+    },
+    "model": "quotes.quote",
+    "pk": 8
+},
+{
+    "fields": {
+        "content": "If you want to know what a man's like, take a good look at how he treats his inferiors, not his equals."
+    },
+    "model": "quotes.quote",
+    "pk": 9
+},
+{
+    "fields": {
+        "content": "Always forgive your enemies; nothing annoys them so much."
+    },
+    "model": "quotes.quote",
+    "pk": 10
+},
+{
+    "fields": {
+        "content": "I've learned that people will forget what you said, people will forget what you did, but people will never forget how you made them feel."
+    },
+    "model": "quotes.quote",
+    "pk": 11
+},
+{
+    "fields": {
+        "content": "Darkness cannot drive out darkness: only light can do that. Hate cannot drive out hate: only love can do that."
+    },
+    "model": "quotes.quote",
+    "pk": 12
+}
+]

@@ -1,0 +1,27 @@
+{% extends 'quotes/base.html' %}
+{% block content %}
+    <h2>Your Quote</h2>
+    <p>{{ quote }}</p>
+
+    {% if quote.is_favorited %}
+        <p>This is a favorite. <a href="{% url 'quotes-unfavorite' pk=quote.pk %}">Unfavorite</a></p>
+    {% elif request.user.is_authenticated %}
+        <p><a href="{% url 'quotes-mark-favorite' pk=quote.pk %}">Mark as favorite</a></p>
+    {% endif %}
+
+    {% with quote.similar_quotes as similar_quotes %}
+        {% if similar_quotes %}
+            <h2>Similar quotes</h2>
+            <p>Other users that enjoyed this quote enjoyed these:</p>
+            <ul>
+                {% for sim_quote in similar_quotes %}
+                    <li><a href="{{ sim_quote.get_absolute_url }}"
+                           >{{ sim_quote }}</a></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+
+    <p><a href="{% url 'quotes-index' %}">View all quotes</a></p>
+{% endblock %}

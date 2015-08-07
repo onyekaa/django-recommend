@@ -1,0 +1,15 @@
+{% extends 'quotes/base.html' %}
+
+{% block content %}
+    <h1>Quotes</h1>
+
+    {% if not quote_list %}
+        <p>No quotes found!</p>
+    {% else %}
+        <ul>
+            {% for quote in quote_list %}
+                <li><a href="{{ quote.get_absolute_url }}">{{ quote }}</a></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}
