@@ -1,6 +1,8 @@
 # django\_recommend
 
-This project is for an application of pyrecommend to Django apps. 
+Use pyrecommend in Django projects. 
+
+**WARNING**: not yet suitable for production.
 
 `django_recommend/` is the actual Django app intended for use in projects.
 
