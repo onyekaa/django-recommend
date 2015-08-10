@@ -1,4 +1,4 @@
-"""setuptools config for pyrecommend."""
+"""setuptools config for django-recommend."""
 import os
 from setuptools import setup
 
@@ -12,13 +12,15 @@ def read(fname):
 
 
 setup(
-    name='pyrecommend',
+    name='django-recommend',
     version='0.1',
     author='Dan Passaro',
     author_email='danpassaro@gmail.com',
-    description='A simple collaborative filtering algorithm for Python.',
+    description='Generate recommendations in Django.',
     license='BSD',
-    packages=['pyrecommend'],
-    tests_require=['tests'],
+    package_dir={'': 'src'},
+    packages=['django_recommend'],
+    install_requires=['pyrecommend'],
+    setup_requires=['wheel'],
     long_description=read('README.md'),
 )
