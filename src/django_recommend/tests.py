@@ -51,3 +51,12 @@ class ObjectSimilarityTest(TestCase):
 
         self.assertEqual(exc.exception.error_dict['__all__'][0].message,
                          'An object cannot be similar to itself.')
+
+    def test_unicode(self):
+        """Making pylint-django happy."""
+        sim = models.ObjectSimilarity(
+            object_1_id=1, object_1_content_type=self.ctype_a,
+            object_2_id=2, object_2_content_type=self.ctype_b,
+            score=4)
+
+        self.assertEqual("1, 2: 4", unicode(sim))

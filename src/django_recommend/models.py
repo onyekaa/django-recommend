@@ -35,3 +35,7 @@ class ObjectSimilarity(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super(ObjectSimilarity, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return '{}, {}: {}'.format(self.object_1_id, self.object_2_id,
+                                   self.score)
