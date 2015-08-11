@@ -3,3 +3,6 @@ python:
     - 2.7  # tox still runs all versions as expected
 install: pip install . tox
 script: tox
+branches:
+  only:
+    - master
