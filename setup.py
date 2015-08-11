@@ -17,7 +17,7 @@ setup(
     author='Dan Passaro',
     author_email='danpassaro@gmail.com',
     description='Generate recommendations in Django.',
-    license='BSD',
+    license='MIT',
     package_dir={'': 'src'},
     packages=['django_recommend'],
     install_requires=['django', 'pyrecommend'],
