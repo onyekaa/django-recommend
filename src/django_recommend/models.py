@@ -63,7 +63,7 @@ class UserScore(models.Model):
     score = models.FloatField()
 
     class Meta:
-        unique_together = ('object_id', 'object_content_type')
+        unique_together = ('object_id', 'object_content_type', 'user')
 
     def save(self, *args, **kwargs):
         self.full_clean()

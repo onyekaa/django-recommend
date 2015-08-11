@@ -76,6 +76,7 @@ class UserScoreTest(TestCase):
 
     def setUp(self):
         self.ctype_a = ContentType.objects.create(app_label='foo')
+        self.object = {'object_id': 1, 'object_content_type': self.ctype_a}
 
     def test_duplicate_ratings(self):
         """A user can only rate an object once."""
@@ -96,3 +97,11 @@ class UserScoreTest(TestCase):
 
         with self.assertRaises(IntegrityError):
             models.UserScore.objects.bulk_create([dupe_rating])
+
+    def test_ratings_different_users(self):
+        """Different users can rate the same object."""
+        user_a = User.objects.create(username='a')
+        user_b = User.objects.create(username='b')
+
+        models.UserScore.objects.create(user=user_a, score=1, **self.object)
+        models.UserScore.objects.create(user=user_b, score=1, **self.object)
