@@ -16,7 +16,7 @@ def get_unicode(obj):
     """A Py2/Py3 compatible way to get a unicode string for an object."""
     try:
         func = unicode
-    except NameError:
+    except NameError:  # pragma: no cover
         func = str  # Py3's str() is same as Py2's unicode()
     return func(obj)
 
