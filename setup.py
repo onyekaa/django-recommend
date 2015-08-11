@@ -22,5 +22,5 @@ setup(
     packages=['django_recommend'],
     install_requires=['django', 'pyrecommend'],
     setup_requires=['wheel'],
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
 )
