@@ -7,9 +7,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 
 
-class ObjectSimilarity(models.Model):
+@python_2_unicode_compatible
+class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     """Similarity between two Django objects."""
     object_1_id = models.IntegerField()
     object_1_content_type = models.ForeignKey(ContentType)
@@ -36,6 +38,8 @@ class ObjectSimilarity(models.Model):
         self.full_clean()
         super(ObjectSimilarity, self).save(*args, **kwargs)
 
-    def __unicode__(self):
-        return '{}, {}: {}'.format(self.object_1_id, self.object_2_id,
-                                   self.score)
+    def __str__(self):
+
+        # On Python 2, str() will convert it back to a bytestr.
+        return str('{}, {}: {}').format(self.object_1_id, self.object_2_id,
+                                        self.score)

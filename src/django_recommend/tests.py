@@ -59,4 +59,12 @@ class ObjectSimilarityTest(TestCase):
             object_2_id=2, object_2_content_type=self.ctype_b,
             score=4)
 
-        self.assertEqual("1, 2: 4", unicode(sim))
+        # In py3, unicode() was removed
+        try:
+            unicode
+        except NameError:
+
+            # pylint: disable=redefined-builtin
+            unicode = str  # Py3's str() is same as Py2's unicode()
+
+        self.assertEqual('1, 2: 4', unicode(sim))
