@@ -34,6 +34,13 @@ class ObjectSimilarityTest(TestCase):
                 object_2_id=1, object_2_content_type=self.ctype_b,
                 score=4)
 
+        with self.assertRaises(IntegrityError):
+            models.ObjectSimilarity.objects.bulk_create([
+                models.ObjectSimilarity(
+                    object_1_id=1, object_1_content_type=self.ctype_a,
+                    object_2_id=1, object_2_content_type=self.ctype_b,
+                    score=4)])
+
     def test_similar_to_self(self):
         """Objects can't be similar to themselves."""
         with self.assertRaises(ValidationError) as exc:
