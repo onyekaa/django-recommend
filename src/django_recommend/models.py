@@ -40,10 +40,8 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
         super(ObjectSimilarity, self).save(*args, **kwargs)
 
     def __str__(self):
-
-        # On Python 2, str() will convert it back to a bytestr.
-        return str('{}, {}: {}').format(self.object_1_id, self.object_2_id,
-                                        self.score)
+        return '{}, {}: {}'.format(self.object_1_id, self.object_2_id,
+                                   self.score)
 
 
 @python_2_unicode_compatible
