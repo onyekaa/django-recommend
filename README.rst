@@ -1,6 +1,9 @@
 django_recommend
 ================
 
+.. image:: https://travis-ci.org/dan-passaro/django-recommend.svg
+    :target: https://travis-ci.org/dan-passaro/django-recommend
+
 Use ``pyrecommend`` in Django projects. 
 
 .. warning:: not yet suitable for production.
