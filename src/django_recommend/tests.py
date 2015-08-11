@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.test import TestCase
@@ -68,3 +69,30 @@ class ObjectSimilarityTest(TestCase):
             unicode = str  # Py3's str() is same as Py2's unicode()
 
         self.assertEqual('1, 2: 4', unicode(sim))
+
+
+class UserScoreTest(TestCase):
+    """Tests for the UserRating model."""
+
+    def setUp(self):
+        self.ctype_a = ContentType.objects.create(app_label='foo')
+
+    def test_duplicate_ratings(self):
+        """A user can only rate an object once."""
+        user = User.objects.create()
+
+        # First rating should create OK
+        models.UserScore.objects.create(
+            object_id=1, object_content_type=self.ctype_a,
+            user=user, score=1)
+
+        # Next one should be disallowed
+        dupe_rating = models.UserScore(
+            object_id=1, object_content_type=self.ctype_a,
+            user=user, score=1)
+
+        with self.assertRaises(ValidationError):
+            dupe_rating.save()
+
+        with self.assertRaises(IntegrityError):
+            models.UserScore.objects.bulk_create([dupe_rating])
