@@ -46,6 +46,7 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
                                         self.score)
 
 
+@python_2_unicode_compatible
 class UserScore(models.Model):
     """Store a user's rating of an object.
 
@@ -68,3 +69,7 @@ class UserScore(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super(UserScore, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return '{}, {}: {}'.format(
+            self.user.username, self.object_id, self.score)

@@ -12,6 +12,15 @@ from django.test import TestCase
 from . import models
 
 
+def get_unicode(obj):
+    """A Py2/Py3 compatible way to get a unicode string for an object."""
+    try:
+        func = unicode
+    except NameError:
+        func = str  # Py3's str() is same as Py2's unicode()
+    return func(obj)
+
+
 class ObjectSimilarityTest(TestCase):
     """Tests for the ObjectSimilarity model."""
 
@@ -60,15 +69,7 @@ class ObjectSimilarityTest(TestCase):
             object_2_id=2, object_2_content_type=self.ctype_b,
             score=4)
 
-        # In py3, unicode() was removed
-        try:
-            unicode
-        except NameError:
-
-            # pylint: disable=redefined-builtin
-            unicode = str  # Py3's str() is same as Py2's unicode()
-
-        self.assertEqual('1, 2: 4', unicode(sim))
+        self.assertEqual('1, 2: 4', get_unicode(sim))
 
 
 class UserScoreTest(TestCase):
@@ -105,3 +106,11 @@ class UserScoreTest(TestCase):
 
         models.UserScore.objects.create(user=user_a, score=1, **self.object)
         models.UserScore.objects.create(user=user_b, score=1, **self.object)
+
+    def test_unicode(self):
+        """Making pylint-django happy."""
+        user = User.objects.create(username='foo', id=50)
+        rating = models.UserScore.objects.create(
+            user=user, score=3, object_id=10, object_content_type=self.ctype_a)
+
+        self.assertEqual('foo, 10: 3.0', get_unicode(rating))
