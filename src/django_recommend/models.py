@@ -11,15 +11,20 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 
+NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
+
+
 @python_2_unicode_compatible
 class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     """Similarity between two Django objects."""
     object_1_id = models.IntegerField()
-    object_1_content_type = models.ForeignKey(ContentType)
+    object_1_content_type = models.ForeignKey(ContentType,
+                                              related_name=NO_RELATED_NAME)
     object_1 = GenericForeignKey('object_1_content_type', 'object_1_id')
 
     object_2_id = models.IntegerField()
-    object_2_content_type = models.ForeignKey(ContentType)
+    object_2_content_type = models.ForeignKey(ContentType,
+                                              related_name=NO_RELATED_NAME)
     object_2 = GenericForeignKey('object_2_content_type', 'object_2_id')
 
     # The actual similarity rating
