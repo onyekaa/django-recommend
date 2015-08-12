@@ -50,20 +50,9 @@ class Quote(models.Model):
         django_recommend.set_score(user, self, 1)
 
     @property
-    def similar_quotes(self, limit=5):
+    def similar_quotes(self):
         """A QuerySet of the most similar quotes."""
-        sim_quotes = QuoteSimilarity.objects.filter(
-            Q(quote_1=self) | Q(quote_2=self)).distinct()
-        sim_quotes = sim_quotes.order_by('-score')
-        if limit:
-            sim_quotes = sim_quotes[:limit]
-
-        def other_quote(sim):
-            """Get the non-self Quote from a QuoteSimilarity."""
-            is_q1 = sim.quote_1 == self
-            return sim.quote_2 if is_q1 else sim.quote_1
-
-        return [other_quote(s) for s in sim_quotes]
+        return ['NOT YET IMPLEMENTED']
 
     def __unicode__(self):
         return self.content
