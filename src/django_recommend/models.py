@@ -45,7 +45,11 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
 
     @classmethod
     def set(cls, obj_a, obj_b, score):
-        """Set the similarity between obj_a and obj_b to score."""
+        """Set the similarity between obj_a and obj_b to score.
+
+        Returns the created ObjectSimilarity instance.
+
+        """
 
         # Always store the lower PKs as object_1, so the pair
         # (object_1, object_2) has a distinct ordering, to prevent duplicate
@@ -63,12 +67,14 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
         else:
             obj_1, obj_2 = obj_b, obj_a
 
-        ObjectSimilarity.objects.create(
+        sim = ObjectSimilarity.objects.create(
             object_1_content_type=ContentType.objects.get_for_model(obj_1),
             object_1_id=obj_1.pk,
             object_2_content_type=ContentType.objects.get_for_model(obj_2),
             object_2_id=obj_2.pk,
             score=score)
+
+        return sim
 
     def __str__(self):
         return '{}, {}: {}'.format(self.object_1_id, self.object_2_id,
