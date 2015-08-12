@@ -10,8 +10,13 @@ import django_recommend.models
 import quotes.models
 
 
+def make_quote(**kwargs):
+    """Shorthand for invoking the Quote constructor."""
+    return quotes.models.Quote.objects.create(**kwargs)
+
+
 @pytest.mark.django_db
-def test_set_score_with_user(rf):
+def test_set_score_request_user(rf):
     """The set_score method associates a score with a user."""
 
     # Username is irrelevant to the test, but must be unique.
@@ -19,7 +24,7 @@ def test_set_score_with_user(rf):
     req = rf.get('/foo')
     req.user = user
     req.session = {}
-    quote = quotes.models.Quote.objects.create(content='hello world')
+    quote = make_quote(content='hello world')
 
     django_recommend.set_score(req, quote, 1)
 
@@ -29,7 +34,7 @@ def test_set_score_with_user(rf):
     req = rf.get('/bar')
     req.user = user
     req.session = {}
-    quote = quotes.models.Quote.objects.create(content='Fizzbuzz')
+    quote = make_quote(content='Fizzbuzz')
 
     django_recommend.set_score(req, quote, 5)
 
@@ -37,10 +42,21 @@ def test_set_score_with_user(rf):
 
 
 @pytest.mark.django_db
+def test_set_score_direct_user():
+    """set_score() can take a user instead of a request."""
+    user = User.objects.create(pk=3)
+    quote = make_quote(content='fizzbuzz')
+
+    django_recommend.set_score(user, quote, 5)
+
+    assert django_recommend.scores_for(quote) == {'user:3': 5}
+
+
+@pytest.mark.django_db
 def test_get_score_with_user():
     """The get_score function can get the user's score for an object."""
     user = User.objects.create(username='def')
-    quote = quotes.models.Quote.objects.create(content='fizzbuzz')
+    quote = make_quote(content='fizzbuzz')
     django_recommend.models.UserScore.set(user, quote, 55)
 
     assert django_recommend.get_score(user, quote) == 55
