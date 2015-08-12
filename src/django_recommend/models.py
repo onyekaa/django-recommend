@@ -119,6 +119,15 @@ class UserScore(models.Model):
         return inst
 
     @classmethod
+    def setdefault(cls, user, obj, score):
+        """Store the user's score only if there's no existing score."""
+        ctype = ContentType.objects.get_for_model(obj)
+        cls.objects.get_or_create(
+            user=user, object_id=obj.pk, object_content_type=ctype,
+            defaults={'score': score}
+        )
+
+    @classmethod
     def get(cls, user, obj):
         """Get the score that user gave to obj.
 

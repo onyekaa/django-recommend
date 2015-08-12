@@ -70,3 +70,16 @@ def test_get_score_when_unset():
 
     assert django_recommend.models.UserScore.objects.count() == 0
     assert django_recommend.get_score(user, quote) == 0
+
+
+@pytest.mark.django_db
+def test_setdefault_score():
+    """setdefault_score only sets a score if it doesn't exist."""
+    user = User.objects.create()
+    quote = make_quote(content='foobar')
+
+    assert django_recommend.get_score(user, quote) == 0
+    django_recommend.setdefault_score(user, quote, 3)
+    assert django_recommend.get_score(user, quote) == 3
+    django_recommend.setdefault_score(user, quote, 5)
+    assert django_recommend.get_score(user, quote) == 3

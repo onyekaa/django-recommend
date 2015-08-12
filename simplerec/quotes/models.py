@@ -8,12 +8,8 @@ import threading
 import time
 
 import django_recommend
-from django.conf import settings
-from django.core import exceptions
 from django.core import urlresolvers
 from django.db import models
-from django.db.models import Q
-from django.db.models import signals
 
 
 LOG = logging.getLogger(__name__)
@@ -30,7 +26,7 @@ class Quote(models.Model):
 
     def mark_viewed_by(self, user):
         """Record that the given Django user viewed this quote."""
-        django_recommend.set_score(user, self, 1)
+        django_recommend.setdefault_score(user, self, 1)
 
     def mark_viewed_by_anonymous(self, session_key):
         """Record a non-authenticated user viewed this quote."""
