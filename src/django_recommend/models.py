@@ -124,11 +124,16 @@ class UserScore(models.Model):
 
         Returns the actual score value, not the UserScore instance.
 
+        "Unrated" objects return 0.
+
         """
         ctype = ContentType.objects.get_for_model(obj)
-        inst = cls.objects.get(user=user, object_id=obj.pk,
-                               object_content_type=ctype)
-        return inst.score
+        try:
+            inst = cls.objects.get(user=user, object_id=obj.pk,
+                                   object_content_type=ctype)
+            return inst.score
+        except cls.DoesNotExist:
+            return 0
 
     @classmethod
     def scores_for(cls, obj):

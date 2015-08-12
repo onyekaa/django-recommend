@@ -60,3 +60,13 @@ def test_get_score_with_user():
     django_recommend.models.UserScore.set(user, quote, 55)
 
     assert django_recommend.get_score(user, quote) == 55
+
+
+@pytest.mark.django_db
+def test_get_score_when_unset():
+    """If a score is not in the DB, 0 is returned."""
+    user = User.objects.create()
+    quote = make_quote(content='foobar')
+
+    assert django_recommend.models.UserScore.objects.count() == 0
+    assert django_recommend.get_score(user, quote) == 0
