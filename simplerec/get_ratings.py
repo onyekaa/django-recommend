@@ -55,25 +55,6 @@ class QuoteData(object):  # pylint: disable=too-few-public-methods
         return iter(self.items)
 
 
-class ResultStorage(object):  # pylint: disable=too-few-public-methods
-    """Write scores into the database."""
-
-    @classmethod
-    def __setitem__(cls, quote, similarity_scores):
-        for score, other_quote in similarity_scores:
-            quotes.models.QuoteSimilarity.store(quote, other_quote, score)
-
-
-def turn_to_pks(sim_data):
-    """Change a similarity data dictionary to use PKs instead of models.
-
-    This makes it slightly easier to read data when futzing with the shell.
-
-    """
-    return {key.pk: [(score, quote.pk) for score, quote in val]
-            for key, val in sim_data.items()}
-
-
 def update_suggestions(quote):
     """Update suggestion info for quote and all related quotes."""
     pyrecommend.calculate_similarity(
