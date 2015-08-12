@@ -107,14 +107,24 @@ class UserScore(models.Model):
 
     @classmethod
     def set(cls, user, obj, score):
-        """Store the score for the given user and given object."""
+        """Store the score for the given user and given object.
+
+        Returns the created UserScore instance.
+
+        """
         ctype = ContentType.objects.get_for_model(obj)
-        cls.objects.create(user=user, object_id=obj.pk,
-                           object_content_type=ctype, score=score)
+        inst, _ = cls.objects.update_or_create(
+            user=user, object_id=obj.pk, object_content_type=ctype,
+            defaults={'score': score})
+        return inst
 
     @classmethod
     def get(cls, user, obj):
-        """Get the score that user gave to obj."""
+        """Get the score that user gave to obj.
+
+        Returns the actual score value, not the UserScore instance.
+
+        """
         ctype = ContentType.objects.get_for_model(obj)
         inst = cls.objects.get(user=user, object_id=obj.pk,
                                object_content_type=ctype)
