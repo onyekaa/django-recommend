@@ -30,8 +30,7 @@ class Quote(models.Model):
 
     def mark_viewed_by_anonymous(self, session_key):
         """Record a non-authenticated user viewed this quote."""
-        AnonymousViewedQuote.objects.get_or_create(
-            session_key=session_key, quote=self)
+        django_recommend.setdefault_score(session_key, self, 1)
 
     def is_favorited_by(self, user):
         """Check if user has favorited this quote."""
