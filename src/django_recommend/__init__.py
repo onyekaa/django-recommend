@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 
-def set_score(request, obj, score):
+def set_score(request_or_user, obj, score):
     """Set the score for the given obj.
 
     Will attribute it to the user, if request has an authenticated user, or to
@@ -12,7 +12,10 @@ def set_score(request, obj, score):
 
     """
     from . import models
-    user = request.user
+    try:  # Requests have a .user object
+        user = request_or_user.user
+    except AttributeError:  # Probably not a request
+        user = request_or_user
     models.UserScore.set(user, obj, score)
 
 
