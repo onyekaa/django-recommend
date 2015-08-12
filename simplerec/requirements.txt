@@ -2,3 +2,4 @@ django
 django-bower
 django-extensions
 pyrecommend
+-e ..

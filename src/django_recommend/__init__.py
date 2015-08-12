@@ -3,8 +3,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from . import models
-
 
 def set_score(request, obj, score):
     """Set the score for the given obj.
@@ -13,10 +11,12 @@ def set_score(request, obj, score):
     a session.
 
     """
+    from . import models
     user = request.user
     models.UserScore.set(user, obj, score)
 
 
 def scores_for(obj):
     """Get all scores for the given object."""
+    from . import models
     return models.UserScore.scores_for(obj)
