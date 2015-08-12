@@ -2,7 +2,6 @@
 """Models for item-to-item collaborative filtering."""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -72,6 +71,26 @@ class UserScore(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super(UserScore, self).save(*args, **kwargs)
+
+    @classmethod
+    def set(cls, user, obj, score):
+        """Store the score for the given user and given object."""
+        ctype = ContentType.objects.get_for_model(obj)
+        cls.objects.create(user=user, object_id=obj.pk,
+                           object_content_type=ctype, score=score)
+
+    @classmethod
+    def scores_for(cls, obj):
+        """Get all scores for the given object.
+
+        Returns a dictionary, not a queryset.
+
+        """
+        ctype = ContentType.objects.get_for_model(obj)
+        scores = cls.objects.filter(object_content_type=ctype,
+                                    object_id=obj.pk)
+        return {'user:{}'.format(score.user.pk): score.score
+                for score in scores}
 
     def __str__(self):
         return '{}, {}: {}'.format(

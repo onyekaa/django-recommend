@@ -4,6 +4,8 @@ from django.contrib import auth  # NOTE: auth.models is used, needs above
 from django.db.models import Q
 from pyrecommend import similarity, rec
 
+from django_recommend import models
+
 import quotes.models
 
 
