@@ -1,14 +1,5 @@
 # coding: utf-8
-"""Tests for object_similarity which depend on things outside of the app.
-
-Tests are split up this way so users can run::
-
-    python manage.py test django_recommend
-
-to do some integration tests against their database backend, without needing
-to have the rest of the test code.
-
-"""
+"""Tests for ObjectSimilarity."""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
