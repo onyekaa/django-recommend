@@ -1,48 +1,17 @@
+# coding: utf-8
 """Interface between pyrecommend and Django quote app."""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
+import collections
+
 import django.contrib.auth.models  # pylint: disable=unused-import
+import pyrecommend.similarity
 from django.contrib import auth  # NOTE: auth.models is used, needs above
 from django.db.models import Q
-from pyrecommend import similarity, rec
 
-from django_recommend import models
-
+import django_recommend
 import quotes.models
-
-
-def ratings_for(obj):
-    """Get all ratings for a quote or a user."""
-    ratings = {}
-
-    if hasattr(obj, 'username'):
-        # If we're getting the ratings for a user, we're looking at all the
-        # different quotes they rated.
-        def key(quote_obj):
-            """Associate each score with a quote."""
-            return quote_obj.quote
-
-    else:
-        # If we're getting ratings fora quote, we're looking at all the
-        # different users that rated it.
-        def key(quote_obj):
-            """Associate each score with a user or session key."""
-            try:
-                return quote_obj.user
-            except AttributeError:
-                return quote_obj.session_key
-
-    for vquote in obj.viewedquote_set.all():
-        ratings[key(vquote)] = 1
-    for fquote in obj.favoritequote_set.all():
-        ratings[key(fquote)] = 5
-
-    try:
-        anon_quotes = obj.anonymousviewedquote_set.all()
-    except AttributeError:
-        anon_quotes = []  # iterating over nothing is cheap
-    for aquote in anon_quotes:
-        ratings[key(aquote)] = 1
-
-    return ratings
 
 
 class QuoteData(object):  # pylint: disable=too-few-public-methods
@@ -79,7 +48,8 @@ class QuoteData(object):  # pylint: disable=too-few-public-methods
 
     def __getitem__(self, quote):
         """Get all user ratings for this quote."""
-        return rec.DictData(ratings_for(quote), 0)
+        return collections.defaultdict(
+            lambda: 0, django_recommend.scores_for(quote))
 
     def __iter__(self):
         return iter(self.items)
@@ -106,5 +76,5 @@ def turn_to_pks(sim_data):
 
 def update_suggestions(quote):
     """Update suggestion info for quote and all related quotes."""
-    rec.similarity_data(QuoteData(quote), similarity.dot_product,
-                        ResultStorage())
+    pyrecommend.calculate_similarity(
+        QuoteData(quote), pyrecommend.similarity.dot_product, ResultStorage())
