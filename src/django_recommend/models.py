@@ -113,6 +113,14 @@ class UserScore(models.Model):
                            object_content_type=ctype, score=score)
 
     @classmethod
+    def get(cls, user, obj):
+        """Get the score that user gave to obj."""
+        ctype = ContentType.objects.get_for_model(obj)
+        inst = cls.objects.get(user=user, object_id=obj.pk,
+                               object_content_type=ctype)
+        return inst.score
+
+    @classmethod
     def scores_for(cls, obj):
         """Get all scores for the given object.
 

@@ -20,3 +20,9 @@ def scores_for(obj):
     """Get all scores for the given object."""
     from . import models
     return models.UserScore.scores_for(obj)
+
+
+def get_score(user, obj):
+    """Get a user's score for the given object."""
+    from . import models
+    return models.UserScore.get(user, obj)

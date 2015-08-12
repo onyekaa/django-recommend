@@ -34,3 +34,13 @@ def test_set_score_with_user(rf):
     django_recommend.set_score(req, quote, 5)
 
     assert django_recommend.scores_for(quote) == {'user:55': 5}
+
+
+@pytest.mark.django_db
+def test_get_score_with_user():
+    """The get_score function can get the user's score for an object."""
+    user = User.objects.create(username='def')
+    quote = quotes.models.Quote.objects.create(content='fizzbuzz')
+    django_recommend.models.UserScore.set(user, quote, 55)
+
+    assert django_recommend.get_score(user, quote) == 55
