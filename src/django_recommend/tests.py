@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import IntegrityError
 from django.test import TestCase
@@ -81,7 +80,7 @@ class UserScoreTest(TestCase):
 
     def test_duplicate_ratings(self):
         """A user can only rate an object once."""
-        user = User.objects.create()
+        user = 'foo'
 
         # First rating should create OK
         models.UserScore.objects.create(
@@ -101,15 +100,15 @@ class UserScoreTest(TestCase):
 
     def test_ratings_different_users(self):
         """Different users can rate the same object."""
-        user_a = User.objects.create(username='a')
-        user_b = User.objects.create(username='b')
+        user_a = 'a'
+        user_b = 'b'
 
         models.UserScore.objects.create(user=user_a, score=1, **self.object)
         models.UserScore.objects.create(user=user_b, score=1, **self.object)
 
     def test_unicode(self):
         """Making pylint-django happy."""
-        user = User.objects.create(username='foo', id=50)
+        user = 'foo'
         rating = models.UserScore.objects.create(
             user=user, score=3, object_id=10, object_content_type=self.ctype_a)
 

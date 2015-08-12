@@ -2,7 +2,7 @@
 """Models for item-to-item collaborative filtering."""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from django.conf import settings
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -94,7 +94,7 @@ class UserScore(models.Model):
     object_content_type = models.ForeignKey(ContentType)
     object = GenericForeignKey('object_content_type', 'object_id')
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.CharField(max_length=255)
 
     score = models.FloatField()
 
@@ -106,12 +106,22 @@ class UserScore(models.Model):
         super(UserScore, self).save(*args, **kwargs)
 
     @classmethod
-    def set(cls, user, obj, score):
+    def __user_str(cls, user_or_str):
+        """Coerce user_or_str params into a string."""
+        try:
+            user_id = user_or_str.pk
+        except AttributeError:
+            return user_or_str
+        return 'user:{}'.format(user_id)
+
+    @classmethod
+    def set(cls, user_or_str, obj, score):
         """Store the score for the given user and given object.
 
         Returns the created UserScore instance.
 
         """
+        user = cls.__user_str(user_or_str)
         ctype = ContentType.objects.get_for_model(obj)
         inst, _ = cls.objects.update_or_create(
             user=user, object_id=obj.pk, object_content_type=ctype,
@@ -119,8 +129,9 @@ class UserScore(models.Model):
         return inst
 
     @classmethod
-    def setdefault(cls, user, obj, score):
+    def setdefault(cls, user_or_str, obj, score):
         """Store the user's score only if there's no existing score."""
+        user = cls.__user_str(user_or_str)
         ctype = ContentType.objects.get_for_model(obj)
         cls.objects.get_or_create(
             user=user, object_id=obj.pk, object_content_type=ctype,
@@ -128,7 +139,7 @@ class UserScore(models.Model):
         )
 
     @classmethod
-    def get(cls, user, obj):
+    def get(cls, user_or_str, obj):
         """Get the score that user gave to obj.
 
         Returns the actual score value, not the UserScore instance.
@@ -136,6 +147,7 @@ class UserScore(models.Model):
         "Unrated" objects return 0.
 
         """
+        user = cls.__user_str(user_or_str)
         ctype = ContentType.objects.get_for_model(obj)
         try:
             inst = cls.objects.get(user=user, object_id=obj.pk,
@@ -154,9 +166,7 @@ class UserScore(models.Model):
         ctype = ContentType.objects.get_for_model(obj)
         scores = cls.objects.filter(object_content_type=ctype,
                                     object_id=obj.pk)
-        return {'user:{}'.format(score.user.pk): score.score
-                for score in scores}
+        return {score.user: score.score for score in scores}
 
     def __str__(self):
-        return '{}, {}: {}'.format(
-            self.user.username, self.object_id, self.score)
+        return '{}, {}: {}'.format(self.user, self.object_id, self.score)
