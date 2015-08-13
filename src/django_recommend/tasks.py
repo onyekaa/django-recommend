@@ -9,6 +9,15 @@ from django.contrib.contenttypes import models as ct_models
 from . import storage
 
 
+def signal_handler(sender, **kwargs):
+    """Kickoff the update similarity calculation below.
+
+    This will figure out what asynchronous method is most appropriate to use.
+    (E.g. celery, or if debugging Python threads, etc.)
+
+    """
+
+
 def update_similarity(obj_params):
     """Update similarity scores for object and all related objects.
 

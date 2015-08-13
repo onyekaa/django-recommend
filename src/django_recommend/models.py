@@ -7,6 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import signals as model_signals
 from django.utils.encoding import python_2_unicode_compatible
 
 
@@ -170,3 +171,16 @@ class UserScore(models.Model):
 
     def __str__(self):
         return '{}, {}: {}'.format(self.user, self.object_id, self.score)
+
+
+def call_handler(*args, **kwargs):
+    """Proxy for the signal handler defined in tasks.
+
+    Prevents a circular import problem.
+
+    """
+    from . import tasks
+    tasks.signal_handler(*args, **kwargs)
+
+
+model_signals.post_save.connect(call_handler, UserScore)

@@ -4,6 +4,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import mock
 import pytest
 
 import django_recommend.models
@@ -39,3 +40,18 @@ def test_set_score_with_str(test_quote):
 
     django_recommend.models.UserScore.set('foo', test_quote, 3)
     assert django_recommend.models.UserScore.get('foo', test_quote) == 3
+
+
+@pytest.mark.django_db
+def test_signal_handler(test_quote):
+    """A new score object triggers the execution of the signal handler."""
+    with mock.patch('django_recommend.tasks.signal_handler') as sig_handler:
+        score_obj = django_recommend.set_score('foo', test_quote, 4)
+    assert sig_handler.called
+    assert sig_handler.call_args[1]['instance'] == score_obj
+
+    # Only listens to signals from UserScore
+    with mock.patch('django_recommend.tasks.signal_handler') as sig_handler:
+        quotes.models.Quote.objects.create(content='fizzbuzz')
+
+    assert not sig_handler.called

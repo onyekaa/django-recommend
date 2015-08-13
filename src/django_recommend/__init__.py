@@ -16,7 +16,7 @@ def set_score(request_or_user, obj, score):
         user = request_or_user.user
     except AttributeError:  # Probably not a request
         user = request_or_user
-    models.UserScore.set(user, obj, score)
+    return models.UserScore.set(user, obj, score)
 
 
 def setdefault_score(request_or_user, obj, score):
@@ -31,7 +31,7 @@ def setdefault_score(request_or_user, obj, score):
         user = request_or_user.user
     except AttributeError:  # Probably not a request
         user = request_or_user
-    models.UserScore.setdefault(user, obj, score)
+    return models.UserScore.setdefault(user, obj, score)
 
 
 def scores_for(obj):
