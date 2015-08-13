@@ -10,6 +10,7 @@ import pyrecommend.similarity
 import pytest
 from django.contrib.contenttypes import models as ct_models
 
+import django_recommend.storage
 import django_recommend.tasks
 import quotes.models
 
@@ -56,6 +57,8 @@ def test_calculates_similarity():
 
     assert calc_sim.called
     args = get_call_args(pyrecommend.calculate_similarity, calc_sim.call_args)
-    assert args['dataset'] == {}
+    assert args['dataset'].obj == quote
+    assert args['dataset'][quote] == {}  # Getting scores
     assert args['similarity'] == pyrecommend.similarity.dot_product
-    assert args['result_storage'] == {}
+    assert isinstance(args['result_storage'],
+                      django_recommend.storage.ResultStorage)

@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import pyrecommend.similarity
+from django.contrib.contenttypes import models as ct_models
 
-from . import models
+from . import storage
 
 
 def update_similarity(obj_params):
@@ -15,8 +16,11 @@ def update_similarity(obj_params):
 
     """
     obj_id, ctype_id = obj_params
-    users_rated_object = models.UserScore.objects.none().exclude(
-        object_id=obj_id, object_content_type__id=ctype_id)
-    assert not users_rated_object
+    content_type = ct_models.ContentType.objects.get(pk=ctype_id)
+    obj = content_type.get_object_for_this_type(pk=obj_id)
+    obj_data = storage.ObjectData(obj)
+
     sim_func = pyrecommend.similarity.dot_product
-    pyrecommend.calculate_similarity({}, sim_func, {})
+
+    pyrecommend.calculate_similarity(obj_data, sim_func,
+                                     storage.ResultStorage())
