@@ -51,3 +51,15 @@ def test_gets_related_items():
 
     obj_data = django_recommend.storage.ObjectData(quote[4])
     assert set(obj_data.keys()) == {quote[4]}
+
+
+@pytest.mark.django_db
+def test_gets_scores_for_one_item():
+    """Accessing a specific item gets all the scores for it."""
+    quote = sample_data()
+
+    obj_data = django_recommend.storage.ObjectData(quote[2])
+    assert obj_data[quote[2]] == {'foo': 2, 'bar': 3}
+
+    obj_data = django_recommend.storage.ObjectData(quote[4])
+    assert obj_data[quote[4]] == {'baz': 5}

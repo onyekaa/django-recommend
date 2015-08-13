@@ -21,7 +21,7 @@ def get_object(ctype_id, obj_id):
     return ctype.get_object_for_this_type(pk=obj_id)
 
 
-class ObjectData(object):
+class ObjectData(object):  # pylint: disable=too-few-public-methods
     """Allow pyrecommend to read Django ORM objects."""
 
     def __init__(self, obj):
@@ -42,3 +42,8 @@ class ObjectData(object):
         ).values_list('object_content_type', 'object_id')
 
         return [get_object(*args) for args in relevant_objects]
+
+    def __getitem__(self, item):
+        """Get all scores for a particular object."""
+        import django_recommend  # HACK: scores_for should be moved
+        return django_recommend.scores_for(item)
