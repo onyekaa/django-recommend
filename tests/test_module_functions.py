@@ -10,8 +10,9 @@ import django_recommend.models
 import quotes.models
 
 
-def make_quote(**kwargs):
+def make_quote(content, **kwargs):
     """Shorthand for invoking the Quote constructor."""
+    kwargs['content'] = content
     return quotes.models.Quote.objects.create(**kwargs)
 
 
@@ -83,3 +84,23 @@ def test_setdefault_score():
     assert django_recommend.get_score(user, quote) == 3
     django_recommend.setdefault_score(user, quote, 5)
     assert django_recommend.get_score(user, quote) == 3
+
+
+@pytest.mark.django_db
+def test_get_similar_objects():
+    """get_similar_objects gets instances most similar to the given object."""
+    quote_a = make_quote('foo')
+    quote_b = make_quote('bar')
+    quote_c = make_quote('baz')
+    django_recommend.models.ObjectSimilarity.set(quote_a, quote_b, 10)
+    django_recommend.models.ObjectSimilarity.set(quote_a, quote_c, 5)
+
+    sim_quotes = django_recommend.similar_objects(quote_a)
+    assert list(sim_quotes) == [quote_b, quote_c]
+
+    # Change scores to ensure sorted order is given.
+    django_recommend.models.ObjectSimilarity.set(quote_a, quote_b, 4)
+    django_recommend.models.ObjectSimilarity.set(quote_a, quote_c, 12)
+
+    sim_quotes = django_recommend.similar_objects(quote_a)
+    assert list(sim_quotes) == [quote_c, quote_b]
