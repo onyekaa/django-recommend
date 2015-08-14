@@ -5,17 +5,15 @@ from __future__ import (absolute_import, division, print_function,
 
 import django.template
 import mock
-from django.utils import encoding
 
 import django_recommend
 import tests.utils
 
 
-@encoding.python_2_unicode_compatible  # pylint: disable=too-few-public-methods
-class FakeObj(object):
+class FakeObj(object):  # pylint: disable=too-few-public-methods
     """Simple object used for testing templates."""
 
-    def __str__(self):
+    def __repr__(self):
         return '{}'.format(id(self))  # unicode() doesn't exist in py3
 
 
@@ -28,10 +26,11 @@ def test_similar_objects():
     ctx = django.template.Context({'obj': mock_obj})
 
     with mock.patch('django_recommend.similar_objects') as similar_objects:
-        similar_objects.return_value = mock_return_value
+        similar_objects.return_value = (mock_return_value,)
         rendered = template.render(ctx)
 
-    assert rendered == '{}'.format(mock_return_value)
+    # Square brackets: converts result to list
+    assert rendered == '[{}]'.format(mock_return_value)
     args = tests.utils.get_call_args(
         django_recommend.similar_objects, similar_objects.call_args)
     assert args['obj'] is mock_obj

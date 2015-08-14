@@ -1,4 +1,5 @@
 {% extends 'quotes/base.html' %}
+{% load django_recommend %}
 {% block content %}
     <h2>Your Quote</h2>
     <p>{{ quote }}</p>
@@ -9,7 +10,7 @@
         <p><a href="{% url 'quotes-mark-favorite' pk=quote.pk %}">Mark as favorite</a></p>
     {% endif %}
 
-    {% with quote.similar_quotes as similar_quotes %}
+    {% with quote|similar_objects as similar_quotes %}
         {% if similar_quotes %}
             <h2>Similar quotes</h2>
             <p>Other users that enjoyed this quote enjoyed these:</p>

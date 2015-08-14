@@ -14,4 +14,4 @@ register = django.template.Library()  # pylint: disable=invalid-name
 @register.filter
 def similar_objects(obj):
     """Get objects similar to obj according to ObjectSimilarity."""
-    return django_recommend.similar_objects(obj)
+    return list(django_recommend.similar_objects(obj))
