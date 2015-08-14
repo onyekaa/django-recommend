@@ -68,12 +68,21 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
         else:
             obj_1, obj_2 = obj_b, obj_a
 
-        sim, _ = ObjectSimilarity.objects.update_or_create(
+        inst_lookup = dict(
             object_1_content_type=ContentType.objects.get_for_model(obj_1),
             object_1_id=obj_1.pk,
             object_2_content_type=ContentType.objects.get_for_model(obj_2),
             object_2_id=obj_2.pk,
-            defaults={'score': score})
+        )
+
+        # Save space by not storing scores of 0.
+        if score == 0:
+            ObjectSimilarity.objects.get(**inst_lookup).delete()
+            sim = None
+        else:
+            kwargs = dict(inst_lookup)
+            kwargs['defaults'] = {'score': score}
+            sim, _ = ObjectSimilarity.objects.update_or_create(**kwargs)
 
         return sim
 
