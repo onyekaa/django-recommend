@@ -68,12 +68,12 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
         else:
             obj_1, obj_2 = obj_b, obj_a
 
-        sim = ObjectSimilarity.objects.create(
+        sim, _ = ObjectSimilarity.objects.update_or_create(
             object_1_content_type=ContentType.objects.get_for_model(obj_1),
             object_1_id=obj_1.pk,
             object_2_content_type=ContentType.objects.get_for_model(obj_2),
             object_2_id=obj_2.pk,
-            score=score)
+            defaults={'score': score})
 
         return sim
 
