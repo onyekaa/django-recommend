@@ -77,7 +77,7 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
 
         # Save space by not storing scores of 0.
         if score == 0:
-            ObjectSimilarity.objects.get(**inst_lookup).delete()
+            ObjectSimilarity.objects.filter(**inst_lookup).delete()
             sim = None
         else:
             kwargs = dict(inst_lookup)
