@@ -3,9 +3,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import logging
+
 from django.contrib.contenttypes import models as ct_models
 
 from . import models
+
+
+LOG = logging.getLogger(__name__)
 
 
 class ResultStorage(object):  # pylint: disable=too-few-public-methods
@@ -13,6 +18,7 @@ class ResultStorage(object):  # pylint: disable=too-few-public-methods
 
     def __setitem__(self, key, val):
         models.ObjectSimilarity.set(*key, score=val)
+        LOG.debug('Setting %s to %s', key, val)
 
 
 def get_object(ctype_id, obj_id):
@@ -29,6 +35,14 @@ class ObjectData(object):  # pylint: disable=too-few-public-methods
 
     def keys(self):
         """All objects worth considering."""
+        return list(iter(self))
+
+    def __getitem__(self, item):
+        """Get all scores for a particular object."""
+        import django_recommend  # HACK: scores_for should be moved
+        return django_recommend.scores_for(item)
+
+    def __iter__(self):
         ctype = ct_models.ContentType.objects.get_for_model(self.obj)
 
         # Get all users who rated this object
@@ -41,9 +55,4 @@ class ObjectData(object):  # pylint: disable=too-few-public-methods
             user__in=relevant_users
         ).values_list('object_content_type', 'object_id')
 
-        return [get_object(*args) for args in relevant_objects]
-
-    def __getitem__(self, item):
-        """Get all scores for a particular object."""
-        import django_recommend  # HACK: scores_for should be moved
-        return django_recommend.scores_for(item)
+        return (get_object(*args) for args in relevant_objects)
