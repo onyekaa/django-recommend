@@ -19,7 +19,7 @@ setup(
     description='Generate recommendations in Django.',
     license='MIT',
     package_dir={'': 'src'},
-    packages=['django_recommend'],
+    packages=['django_recommend', 'django_recommend.templatetags'],
     install_requires=['django', 'pyrecommend'],
     setup_requires=['wheel'],
     long_description=read('README.rst'),
