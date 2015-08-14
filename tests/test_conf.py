@@ -3,8 +3,13 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+from django_recommend import conf
 
-def test_proxies_django_settings():
+
+def test_proxies_django_settings(settings):
     """Normal Django settings are accessible through the object."""
-    import pytest
-    pytest.skip("Don't remember how to override django settings during test.")
+    settings.INSTALLED_APPS = ('foo',)
+    assert conf.settings.INSTALLED_APPS == ('foo',)
+
+    settings.INSTALLED_APPS = ('bar',)
+    assert conf.settings.INSTALLED_APPS == ('bar',)
