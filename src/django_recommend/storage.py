@@ -53,6 +53,8 @@ class ObjectData(object):  # pylint: disable=too-few-public-methods
         # Get all objects that those users have rated
         relevant_objects = models.UserScore.objects.filter(
             user__in=relevant_users
-        ).values_list('object_content_type', 'object_id')
+        ).values_list(
+            'object_content_type', 'object_id'
+        ).distinct()
 
         return (get_object(*args) for args in relevant_objects)
