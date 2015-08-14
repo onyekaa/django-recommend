@@ -27,7 +27,7 @@ except ImportError:
     def shared_task(func):
         """Add a mock 'delay' method."""
 
-        def delay(*args):
+        def delay(*args):  # pragma: no cover
             """For debugging; update suggestions in background thread."""
             if not THREADED:
                 return update_similarity(*args)
