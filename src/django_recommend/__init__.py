@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import django.db.models
 from django.contrib.contenttypes import models as ct_models
 
 
@@ -55,17 +56,24 @@ def similar_objects(obj):
 
     """
     from . import models
+    Q = django.db.models.Q  # pylint: disable=invalid-name
 
     ctype = ct_models.ContentType.objects.get_for_model(obj)
 
-    criteria = {
-        'object_1_content_type': ctype,
-        'object_1_id': obj.pk
-    }
+    lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id=obj.pk)) |
+              (Q(object_2_content_type=ctype) & Q(object_2_id=obj.pk)))
 
-    high_similarity = models.ObjectSimilarity.objects.filter(
-        **criteria).order_by('-score').prefetch_related(
-            'object_1_content_type', 'object_2_content_type')
+    high_similarity = models.ObjectSimilarity.objects.filter(lookup)
+    high_similarity = high_similarity.order_by('-score').prefetch_related(
+        'object_1_content_type', 'object_2_content_type')
 
-    return (ctype.get_object_for_this_type(pk=s.object_2_id) for s in
-            high_similarity)
+    def get_other_object(sim_obj):
+        """Get the object in sim_obj that isn't obj."""
+        same_id_as_1 = sim_obj.object_1_id == obj.pk
+        same_ctype_as_1 = sim_obj.object_1_content_type == ctype
+
+        if same_id_as_1 and same_ctype_as_1:
+            return sim_obj.object_2
+        return sim_obj.object_1
+
+    return (get_other_object(s) for s in high_similarity)

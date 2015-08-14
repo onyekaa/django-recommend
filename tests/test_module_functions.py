@@ -104,3 +104,8 @@ def test_get_similar_objects():
 
     sim_quotes = django_recommend.similar_objects(quote_a)
     assert list(sim_quotes) == [quote_c, quote_b]
+
+    # Change which object is requested to make sure SUT isn't only filtering
+    # against object_1
+    sim_quotes = django_recommend.similar_objects(quote_b)
+    assert list(sim_quotes) == [quote_a]
