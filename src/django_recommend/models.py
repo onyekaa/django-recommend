@@ -183,4 +183,5 @@ def call_handler(*args, **kwargs):
     tasks.signal_handler(*args, **kwargs)
 
 
-model_signals.post_save.connect(call_handler, UserScore)
+model_signals.post_save.connect(call_handler, UserScore,
+                                dispatch_uid="recommend_post_save")
