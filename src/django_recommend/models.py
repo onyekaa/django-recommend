@@ -31,9 +31,15 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     score = models.FloatField()
 
     class Meta:
+        index_together = (
+            ('object_1_id', 'object_1_content_type'),
+            ('object_2_id', 'object_2_content_type'),
+        )
+
         unique_together = (
-            'object_1_id', 'object_1_content_type',
-            'object_2_id', 'object_2_content_type')
+            'object_1_id', 'object_1_content_type', 'object_2_id',
+            'object_2_content_type',
+        )
 
     def clean(self):
         if (self.object_1_id == self.object_2_id and
@@ -104,11 +110,12 @@ class UserScore(models.Model):
     object_content_type = models.ForeignKey(ContentType)
     object = GenericForeignKey('object_content_type', 'object_id')
 
-    user = models.CharField(max_length=255)
+    user = models.CharField(max_length=255, db_index=True)
 
     score = models.FloatField()
 
     class Meta:
+        index_together = ('object_id', 'object_content_type')
         unique_together = ('object_id', 'object_content_type', 'user')
 
     def save(self, *args, **kwargs):
