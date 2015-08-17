@@ -43,6 +43,26 @@ def test_set_score_with_str(test_quote):
 
 
 @pytest.mark.django_db
+def test_set_score_0(test_quote):
+    """Setting a score of 0 deletes the score object."""
+    score_obj = django_recommend.models.UserScore.set('foo', test_quote, 3)
+    if not score_obj:
+        pytest.skip()
+    django_recommend.models.UserScore.set('foo', test_quote, 0)
+    assert not django_recommend.models.UserScore.objects.filter(
+        pk=score_obj.pk).exists()
+
+
+@pytest.mark.django_db
+def test_set_new_score_0(test_quote):
+    """Setting a new score to 0 doesn't crash."""
+    assert django_recommend.models.UserScore.get('foo', test_quote) == 0
+    score_obj = django_recommend.models.UserScore.set('foo', test_quote, 0)
+    assert score_obj is None
+    assert django_recommend.models.UserScore.objects.all().count() == 0
+
+
+@pytest.mark.django_db
 def test_signal_handler(test_quote):
     """A new score object triggers the execution of the signal handler."""
     with mock.patch('django_recommend.tasks.signal_handler') as sig_handler:

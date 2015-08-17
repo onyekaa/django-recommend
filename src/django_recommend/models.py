@@ -140,9 +140,17 @@ class UserScore(models.Model):
         """
         user = cls.__user_str(user_or_str)
         ctype = ContentType.objects.get_for_model(obj)
-        inst, _ = cls.objects.update_or_create(
-            user=user, object_id=obj.pk, object_content_type=ctype,
-            defaults={'score': score})
+
+        inst_lookup = dict(
+            user=user, object_id=obj.pk, object_content_type=ctype)
+
+        if score:
+            kwargs = dict(inst_lookup)
+            kwargs['defaults'] = {'score': score}
+            inst, _ = cls.objects.update_or_create(**kwargs)
+        else:
+            inst = None
+            cls.objects.filter(**inst_lookup).delete()
         return inst
 
     @classmethod
