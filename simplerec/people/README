@@ -1,0 +1,6 @@
+This app only exists for the sake of one test, which involves a ContentType
+existing on a different database than the model it represents.
+
+For more info see:
+
+https://code.djangoproject.com/ticket/16281

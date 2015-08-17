@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
 import pytest
 
 import django_recommend.storage
+import people.models
 import quotes.models
 
 
@@ -63,3 +64,16 @@ def test_gets_scores_for_one_item():
 
     obj_data = django_recommend.storage.ObjectData(quote[4])
     assert obj_data[quote[4]] == {'baz': 5}
+
+
+@pytest.mark.django_db
+def test_data_multiple_dbs():
+    """Can retrieve objects from other databases."""
+    ryan = people.models.Person.objects.create(name='Ryan')
+    toby = people.models.Person.objects.create(name='Toby')
+    django_recommend.set_score('michael', ryan, 20)
+    django_recommend.set_score('michael', toby, 1)
+
+    data = django_recommend.storage.ObjectData(ryan)
+
+    assert set(data) == {ryan, toby}

@@ -70,7 +70,7 @@ def update_similarity(obj_params):
     LOG.info('Calculating simlarity for %s', obj_params)
     obj_id, ctype_id = obj_params
     content_type = ct_models.ContentType.objects.get(pk=ctype_id)
-    obj = content_type.get_object_for_this_type(pk=obj_id)
+    obj = content_type.model_class().objects.get(pk=obj_id)
     obj_data = storage.ObjectData(obj)
 
     sim_func = pyrecommend.similarity.dot_product

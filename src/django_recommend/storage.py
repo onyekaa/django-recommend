@@ -24,7 +24,7 @@ class ResultStorage(object):  # pylint: disable=too-few-public-methods
 def get_object(ctype_id, obj_id):
     """Get a model from a ContentType and an object ID."""
     ctype = ct_models.ContentType.objects.get(pk=ctype_id)
-    return ctype.get_object_for_this_type(pk=obj_id)
+    return ctype.model_class().objects.get(pk=obj_id)
 
 
 class ObjectData(object):  # pylint: disable=too-few-public-methods
