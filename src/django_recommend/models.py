@@ -201,3 +201,5 @@ def call_handler(*args, **kwargs):
 
 model_signals.post_save.connect(call_handler, UserScore,
                                 dispatch_uid="recommend_post_save")
+model_signals.post_delete.connect(call_handler, UserScore,
+                                  dispatch_uid="recommend_post_save")
