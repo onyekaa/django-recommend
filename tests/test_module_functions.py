@@ -135,6 +135,17 @@ def test_setdefault_score_anon(client, some_quote):
 
 
 @pytest.mark.django_db
+def test_setdefault_score_str(some_quote):
+    """setdefault_score() takes a string."""
+    django_recommend.setdefault_score('qwerty', some_quote, 20)
+    assert django_recommend.get_score('qwerty', some_quote) == 20
+
+    # Won't overwrite
+    django_recommend.setdefault_score('qwerty', some_quote, 3)
+    assert django_recommend.get_score('qwerty', some_quote) == 20
+
+
+@pytest.mark.django_db
 def test_get_similar_objects():
     """get_similar_objects gets instances most similar to the given object."""
     quote_a = make_quote('foo')
