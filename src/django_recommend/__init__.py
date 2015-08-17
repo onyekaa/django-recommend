@@ -7,6 +7,21 @@ import django.db.models
 from django.contrib.contenttypes import models as ct_models
 
 
+def __user_from_request(req):
+    """Get either the User object or session key from a request.
+
+    Returns None for anonymous users with no session keys.
+
+    """
+    try:  # Requests have a .user object
+        req.user
+    except AttributeError:  # Probably not a request, maybe a string
+        return req
+    if req.user.is_authenticated():
+        return req.user
+    return req.session.session_key
+
+
 def set_score(request_or_user, obj, score):
     """Set the score for the given obj.
 
@@ -15,10 +30,7 @@ def set_score(request_or_user, obj, score):
 
     """
     from . import models
-    try:  # Requests have a .user object
-        user = request_or_user.user
-    except AttributeError:  # Probably not a request
-        user = request_or_user
+    user = __user_from_request(request_or_user)
     return models.UserScore.set(user, obj, score)
 
 
@@ -30,10 +42,7 @@ def setdefault_score(request_or_user, obj, score):
 
     """
     from . import models
-    try:  # Requests have a .user object
-        user = request_or_user.user
-    except AttributeError:  # Probably not a request
-        user = request_or_user
+    user = __user_from_request(request_or_user)
     return models.UserScore.setdefault(user, obj, score)
 
 
@@ -43,9 +52,10 @@ def scores_for(obj):
     return models.UserScore.scores_for(obj)
 
 
-def get_score(user, obj):
+def get_score(request_or_user, obj):
     """Get a user's score for the given object."""
     from . import models
+    user = __user_from_request(request_or_user)
     return models.UserScore.get(user, obj)
 
 
