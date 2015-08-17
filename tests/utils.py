@@ -5,6 +5,8 @@ from __future__ import (absolute_import, division, print_function,
 
 import inspect
 
+import quotes.models
+
 
 def get_call_args(mocked_func, mock_call):
     """Get a dictionary of arg values from a mock call.
@@ -37,3 +39,9 @@ def get_call_args(mocked_func, mock_call):
     """
     pos_args, key_args = mock_call
     return inspect.getcallargs(mocked_func, *pos_args, **key_args)
+
+
+def make_quote(content, **kwargs):
+    """Shorthand for invoking the Quote constructor."""
+    kwargs['content'] = content
+    return quotes.models.Quote.objects.create(**kwargs)

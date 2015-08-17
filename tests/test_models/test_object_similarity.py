@@ -7,12 +7,7 @@ import pytest
 from django.contrib.contenttypes import models as ct_models
 
 from django_recommend import models
-from quotes import models as quote_models
-
-
-def make_quote(content, **kwargs):
-    """Shorthand for the Quote constructor."""
-    return quote_models.Quote.objects.create(content=content, **kwargs)
+from tests.utils import make_quote
 
 
 @pytest.mark.django_db
