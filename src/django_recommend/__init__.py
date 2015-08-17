@@ -77,13 +77,20 @@ def similar_objects(obj):
     high_similarity = high_similarity.order_by('-score').prefetch_related(
         'object_1_content_type', 'object_2_content_type')
 
+    def get_object(sim_obj, num):
+        """So much boilerplate due to Django bug."""
+        prefix = 'object_{}_'.format(num)
+        target_id = getattr(sim_obj, prefix + 'id')
+        target_ctype = getattr(sim_obj, prefix + 'content_type')
+        return target_ctype.model_class().objects.get(pk=target_id)
+
     def get_other_object(sim_obj):
         """Get the object in sim_obj that isn't obj."""
         same_id_as_1 = sim_obj.object_1_id == obj.pk
         same_ctype_as_1 = sim_obj.object_1_content_type == ctype
 
         if same_id_as_1 and same_ctype_as_1:
-            return sim_obj.object_2
-        return sim_obj.object_1
+            return get_object(sim_obj, 2)
+        return get_object(sim_obj, 1)
 
     return (get_other_object(s) for s in high_similarity)

@@ -8,6 +8,7 @@ import pytest
 from django.contrib.auth.models import User
 
 import django_recommend.models
+import people.models
 import quotes.models
 
 
@@ -168,6 +169,21 @@ def test_get_similar_objects():
     # against object_1
     sim_quotes = django_recommend.similar_objects(quote_b)
     assert list(sim_quotes) == [quote_a]
+
+
+@pytest.mark.django_db
+def test_similar_objects_multi_db():
+    """get_similar_objects doesn't crash when models are in different DBs."""
+    pam = people.models.Person.objects.create(name='Pam')
+    jim = people.models.Person.objects.create(name='Jim')
+    toby = people.models.Person.objects.create(name='Toby')
+    django_recommend.models.ObjectSimilarity.set(pam, jim, 10)
+    django_recommend.models.ObjectSimilarity.set(pam, toby, 11)
+    django_recommend.models.ObjectSimilarity.set(jim, toby, 2)
+
+    sim_people = django_recommend.similar_objects(pam)
+
+    assert list(sim_people) == [toby, jim]
 
 
 @pytest.mark.django_db
