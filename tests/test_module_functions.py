@@ -106,6 +106,35 @@ def test_setdefault_score():
 
 
 @pytest.mark.django_db
+def test_setdefault_score_authed(client, some_quote):
+    """setdefault_score() takes an authenticated request."""
+    user = make_user(username='abc', password='def')
+    assert client.login(username='abc', password='def')
+    request = client.get('/foobar').wsgi_request
+
+    django_recommend.setdefault_score(request, some_quote, 12)
+    assert django_recommend.get_score(user, some_quote) == 12
+
+    # Won't overwrite
+    django_recommend.setdefault_score(request, some_quote, 20)
+    assert django_recommend.get_score(user, some_quote) == 12
+
+
+@pytest.mark.django_db
+def test_setdefault_score_anon(client, some_quote):
+    """setdefault_score() takes an anonymous request."""
+    request = client.get('/foobar').wsgi_request
+    assert not request.user.is_authenticated()
+
+    django_recommend.setdefault_score(request, some_quote, 9)
+    assert django_recommend.get_score(request, some_quote) == 9
+
+    # Won't overwrite
+    django_recommend.setdefault_score(request, some_quote, 3)
+    assert django_recommend.get_score(request, some_quote) == 9
+
+
+@pytest.mark.django_db
 def test_get_similar_objects():
     """get_similar_objects gets instances most similar to the given object."""
     quote_a = make_quote('foo')

@@ -42,10 +42,7 @@ def setdefault_score(request_or_user, obj, score):
 
     """
     from . import models
-    try:  # Requests have a .user object
-        user = request_or_user.user
-    except AttributeError:  # Probably not a request
-        user = request_or_user
+    user = __user_from_request(request_or_user)
     return models.UserScore.setdefault(user, obj, score)
 
 
