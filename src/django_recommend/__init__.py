@@ -17,6 +17,8 @@ def __user_from_request(req):
         req.user
     except AttributeError:  # Probably not a request, maybe a string
         return req
+    if req.user.is_authenticated():
+        return req.user
     return req.session.session_key
 
 
