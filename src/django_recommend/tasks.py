@@ -54,7 +54,7 @@ def signal_handler(**kwargs):
     if not settings.RECOMMEND_ENABLE_AUTOCALC:
         return
     user_score = kwargs['instance']
-    content_type_id = user_score.object_content_type.pk
+    content_type_id = user_score.object_content_type_id
     object_id = user_score.object_id
     params = object_id, content_type_id
     update_similarity.delay(params)
