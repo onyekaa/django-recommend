@@ -1,5 +1,6 @@
 # coding: utf-8
 """Tests for "entry point" functions in django_recommend."""
+# pylint: disable=redefined-outer-name
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
@@ -14,6 +15,18 @@ def make_quote(content, **kwargs):
     """Shorthand for invoking the Quote constructor."""
     kwargs['content'] = content
     return quotes.models.Quote.objects.create(**kwargs)
+
+
+@pytest.fixture
+def some_quote():
+    """A throwaway quote for testing."""
+    return quotes.models.Quote.objects.create(content='foobar')
+
+
+@pytest.fixture
+def some_other_quote():
+    """Another throaway quote for testing."""
+    return quotes.models.Quote.objects.create(content='fizzbuzz')
 
 
 @pytest.mark.django_db
@@ -109,3 +122,18 @@ def test_get_similar_objects():
     # against object_1
     sim_quotes = django_recommend.similar_objects(quote_b)
     assert list(sim_quotes) == [quote_a]
+
+
+@pytest.mark.django_db
+def test_set_score_anon_request(client, some_quote, some_other_quote):
+    """set_score() accepts a request."""
+    resp = client.get('/foo')  # Don't care about response
+    req = resp.wsgi_request
+    assert not req.user.is_authenticated()
+    assert req.session.session_key
+
+    django_recommend.set_score(req, some_quote, 343)
+    assert django_recommend.get_score(req, some_quote) == 343
+
+    django_recommend.set_score(req, some_other_quote, 242)
+    assert django_recommend.get_score(req, some_other_quote) == 242
