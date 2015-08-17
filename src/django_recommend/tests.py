@@ -11,6 +11,15 @@ from django.test import TestCase
 from . import models
 
 
+def get_unicode(obj):
+    """A Py2/Py3 compatible way to get a unicode string for an object."""
+    try:
+        func = unicode
+    except NameError:  # pragma: no cover
+        func = str  # Py3's str() is same as Py2's unicode()
+    return func(obj)
+
+
 class ObjectSimilarityTest(TestCase):
     """Tests for the ObjectSimilarity model."""
 
@@ -59,12 +68,48 @@ class ObjectSimilarityTest(TestCase):
             object_2_id=2, object_2_content_type=self.ctype_b,
             score=4)
 
-        # In py3, unicode() was removed
-        try:
-            unicode
-        except NameError:
+        self.assertEqual('1, 2: 4', get_unicode(sim))
 
-            # pylint: disable=redefined-builtin
-            unicode = str  # Py3's str() is same as Py2's unicode()
 
-        self.assertEqual('1, 2: 4', unicode(sim))
+class UserScoreTest(TestCase):
+    """Tests for the UserRating model."""
+
+    def setUp(self):
+        self.ctype_a = ContentType.objects.create(app_label='foo')
+        self.object = {'object_id': 1, 'object_content_type': self.ctype_a}
+
+    def test_duplicate_ratings(self):
+        """A user can only rate an object once."""
+        user = 'foo'
+
+        # First rating should create OK
+        models.UserScore.objects.create(
+            object_id=1, object_content_type=self.ctype_a,
+            user=user, score=1)
+
+        # Next one should be disallowed
+        dupe_rating = models.UserScore(
+            object_id=1, object_content_type=self.ctype_a,
+            user=user, score=1)
+
+        with self.assertRaises(ValidationError):
+            dupe_rating.save()
+
+        with self.assertRaises(IntegrityError):
+            models.UserScore.objects.bulk_create([dupe_rating])
+
+    def test_ratings_different_users(self):
+        """Different users can rate the same object."""
+        user_a = 'a'
+        user_b = 'b'
+
+        models.UserScore.objects.create(user=user_a, score=1, **self.object)
+        models.UserScore.objects.create(user=user_b, score=1, **self.object)
+
+    def test_unicode(self):
+        """Making pylint-django happy."""
+        user = 'foo'
+        rating = models.UserScore.objects.create(
+            user=user, score=3, object_id=10, object_content_type=self.ctype_a)
+
+        self.assertEqual('foo, 10: 3.0', get_unicode(rating))

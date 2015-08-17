@@ -7,27 +7,39 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import signals as model_signals
 from django.utils.encoding import python_2_unicode_compatible
+
+
+NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
 @python_2_unicode_compatible
 class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     """Similarity between two Django objects."""
     object_1_id = models.IntegerField()
-    object_1_content_type = models.ForeignKey(ContentType)
+    object_1_content_type = models.ForeignKey(ContentType,
+                                              related_name=NO_RELATED_NAME)
     object_1 = GenericForeignKey('object_1_content_type', 'object_1_id')
 
     object_2_id = models.IntegerField()
-    object_2_content_type = models.ForeignKey(ContentType)
+    object_2_content_type = models.ForeignKey(ContentType,
+                                              related_name=NO_RELATED_NAME)
     object_2 = GenericForeignKey('object_2_content_type', 'object_2_id')
 
     # The actual similarity rating
     score = models.FloatField()
 
     class Meta:
+        index_together = (
+            ('object_1_id', 'object_1_content_type'),
+            ('object_2_id', 'object_2_content_type'),
+        )
+
         unique_together = (
-            'object_1_id', 'object_1_content_type',
-            'object_2_id', 'object_2_content_type')
+            'object_1_id', 'object_1_content_type', 'object_2_id',
+            'object_2_content_type',
+        )
 
     def clean(self):
         if (self.object_1_id == self.object_2_id and
@@ -38,8 +50,164 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
         self.full_clean()
         super(ObjectSimilarity, self).save(*args, **kwargs)
 
-    def __str__(self):
+    @classmethod
+    def set(cls, obj_a, obj_b, score):
+        """Set the similarity between obj_a and obj_b to score.
 
-        # On Python 2, str() will convert it back to a bytestr.
-        return str('{}, {}: {}').format(self.object_1_id, self.object_2_id,
-                                        self.score)
+        Returns the created ObjectSimilarity instance.
+
+        """
+
+        # Always store the lower PKs as object_1, so the pair
+        # (object_1, object_2) has a distinct ordering, to prevent duplicate
+        # data.
+
+        def sort_key(obj):
+            """Get a sortable tuple representing obj."""
+            return (ContentType.objects.get_for_model(obj).pk, obj.pk)
+
+        obj_a_key = sort_key(obj_a)
+        obj_b_key = sort_key(obj_b)
+
+        if obj_a_key < obj_b_key:
+            obj_1, obj_2 = obj_a, obj_b
+        else:
+            obj_1, obj_2 = obj_b, obj_a
+
+        inst_lookup = dict(
+            object_1_content_type=ContentType.objects.get_for_model(obj_1),
+            object_1_id=obj_1.pk,
+            object_2_content_type=ContentType.objects.get_for_model(obj_2),
+            object_2_id=obj_2.pk,
+        )
+
+        # Save space by not storing scores of 0.
+        if score == 0:
+            ObjectSimilarity.objects.filter(**inst_lookup).delete()
+            sim = None
+        else:
+            kwargs = dict(inst_lookup)
+            kwargs['defaults'] = {'score': score}
+            sim, _ = ObjectSimilarity.objects.update_or_create(**kwargs)
+
+        return sim
+
+    def __str__(self):
+        return '{}, {}: {}'.format(self.object_1_id, self.object_2_id,
+                                   self.score)
+
+
+@python_2_unicode_compatible
+class UserScore(models.Model):
+    """Store a user's rating of an object.
+
+    "Rating" doesn't necessarily need to be e.g. 1-10 points or 1-5 star voting
+    system. It is often easy to treat e.g. object view as 1 point and object
+    bookmarking as 5 points, for example. This is called 'implicit feedback.'
+
+    """
+    object_id = models.IntegerField()
+    object_content_type = models.ForeignKey(ContentType)
+    object = GenericForeignKey('object_content_type', 'object_id')
+
+    user = models.CharField(max_length=255, db_index=True)
+
+    score = models.FloatField()
+
+    class Meta:
+        index_together = ('object_id', 'object_content_type')
+        unique_together = ('object_id', 'object_content_type', 'user')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super(UserScore, self).save(*args, **kwargs)
+
+    @classmethod
+    def __user_str(cls, user_or_str):
+        """Coerce user_or_str params into a string."""
+        try:
+            user_id = user_or_str.pk
+        except AttributeError:
+            return user_or_str
+        return 'user:{}'.format(user_id)
+
+    @classmethod
+    def set(cls, user_or_str, obj, score):
+        """Store the score for the given user and given object.
+
+        Returns the created UserScore instance.
+
+        """
+        user = cls.__user_str(user_or_str)
+        ctype = ContentType.objects.get_for_model(obj)
+
+        inst_lookup = dict(
+            user=user, object_id=obj.pk, object_content_type=ctype)
+
+        if score:
+            kwargs = dict(inst_lookup)
+            kwargs['defaults'] = {'score': score}
+            inst, _ = cls.objects.update_or_create(**kwargs)
+        else:
+            inst = None
+            cls.objects.filter(**inst_lookup).delete()
+        return inst
+
+    @classmethod
+    def setdefault(cls, user_or_str, obj, score):
+        """Store the user's score only if there's no existing score."""
+        user = cls.__user_str(user_or_str)
+        ctype = ContentType.objects.get_for_model(obj)
+        cls.objects.get_or_create(
+            user=user, object_id=obj.pk, object_content_type=ctype,
+            defaults={'score': score}
+        )
+
+    @classmethod
+    def get(cls, user_or_str, obj):
+        """Get the score that user gave to obj.
+
+        Returns the actual score value, not the UserScore instance.
+
+        "Unrated" objects return 0.
+
+        """
+        user = cls.__user_str(user_or_str)
+        ctype = ContentType.objects.get_for_model(obj)
+        try:
+            inst = cls.objects.get(user=user, object_id=obj.pk,
+                                   object_content_type=ctype)
+            return inst.score
+        except cls.DoesNotExist:
+            return 0
+
+    @classmethod
+    def scores_for(cls, obj):
+        """Get all scores for the given object.
+
+        Returns a dictionary, not a queryset.
+
+        """
+        ctype = ContentType.objects.get_for_model(obj)
+        scores = cls.objects.filter(object_content_type=ctype,
+                                    object_id=obj.pk)
+        return {score.user: score.score for score in scores}
+
+    def __str__(self):
+        return '{}, {}: {}'.format(self.user, self.object_id, self.score)
+
+
+def call_handler(*args, **kwargs):
+    """Proxy for the signal handler defined in tasks.
+
+    Prevents a circular import problem.
+
+    """
+    from . import tasks
+    tasks.signal_handler(*args, **kwargs)
+
+
+model_signals.post_save.connect(call_handler, UserScore,
+                                dispatch_uid="recommend_post_save")
+model_signals.post_delete.connect(call_handler, UserScore,
+                                  dispatch_uid="recommend_post_save")

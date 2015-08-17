@@ -38,9 +38,10 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'djangobower',
     'django_extensions',
+    'djangobower',
 
+    'django_recommend',
     'quotes',
 )
 
