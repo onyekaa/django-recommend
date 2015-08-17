@@ -29,25 +29,31 @@ def some_other_quote():
     return quotes.models.Quote.objects.create(content='fizzbuzz')
 
 
-@pytest.mark.django_db
-def test_set_score_request_user(rf):
-    """The set_score method associates a score with a user."""
+def make_user(**kwargs):
+    """Make a user, including password."""
+    password = kwargs.pop('password', None)
+    user_obj = User.objects.create(**kwargs)
+    if password is not None:
+        user_obj.set_password(password)
+        user_obj.save()
+    return user_obj
 
-    # Username is irrelevant to the test, but must be unique.
-    user = User.objects.create(username='abc', pk=30)
-    req = rf.get('/foo')
-    req.user = user
-    req.session = {}
+
+@pytest.mark.django_db
+def test_set_score_request_user(client):
+    """The set_score method associates a score with a user."""
+    make_user(username='abc', password='foo', pk=30)
+    assert client.login(username='abc', password='foo')
+    req = client.get('/foo').wsgi_request
     quote = make_quote(content='hello world')
 
     django_recommend.set_score(req, quote, 1)
 
     assert django_recommend.scores_for(quote) == {'user:30': 1}
 
-    user = User.objects.create(username='xyz', pk=55)
-    req = rf.get('/bar')
-    req.user = user
-    req.session = {}
+    make_user(username='xyz', password='spongebob3', pk=55)
+    assert client.login(username='xyz', password='spongebob3')
+    req = client.get('/bar/').wsgi_request
     quote = make_quote(content='Fizzbuzz')
 
     django_recommend.set_score(req, quote, 5)
