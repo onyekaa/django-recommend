@@ -1,8 +1,11 @@
-*.pyc
-db.sqlite3
-bower_components
 *.egg-info/
-.ipynb_checkpoints/
-htmlcov/
+*.pyc
 .coverage
+.ipynb_checkpoints/
 .tox
+bower_components
+build/
+db.sqlite3
+dist/
+django-recommend-*/
+htmlcov/
