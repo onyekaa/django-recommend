@@ -10,12 +10,7 @@ from django.contrib.auth.models import User
 import django_recommend.models
 import people.models
 import quotes.models
-
-
-def make_quote(content, **kwargs):
-    """Shorthand for invoking the Quote constructor."""
-    kwargs['content'] = content
-    return quotes.models.Quote.objects.create(**kwargs)
+from tests.utils import make_quote
 
 
 @pytest.fixture

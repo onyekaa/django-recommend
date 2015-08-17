@@ -7,13 +7,7 @@ import pytest
 
 import django_recommend.storage
 import people.models
-import quotes.models
-
-
-def make_quote(content, **kwargs):
-    """A shorthand for the Quote constructor."""
-    kwargs['content'] = content
-    return quotes.models.Quote.objects.create(**kwargs)
+from tests.utils import make_quote
 
 
 def sample_data():
