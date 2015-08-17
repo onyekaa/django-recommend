@@ -24,15 +24,17 @@ Quickstart
 
 * In your templates, use ``{% load django_recommend %}`` and
   ``{{ obj|similar_objects }}`` to show similar objects to visitors. This
-  filter returns a list, so you may also do, for example::
+  filter returns a list, so you may also do, for example:
 
-    {% with similar_products as product|similar_objects %}
-        {% if similiar_products %}
-            <h2>Other users also liked:</h2>
-            <ul>
-            {% for product in similar_products %}
-                <li><a href="{{ product.get_absolute_url }}">{{ product }}</a></li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
+  .. code:: html+django
+
+      {% with similar_products as product|similar_objects %}
+          {% if similiar_products %}
+              <h2>Other users also liked:</h2>
+              <ul>
+              {% for product in similar_products %}
+                  <li><a href="{{ product.get_absolute_url }}">{{ product }}</a></li>
+              {% endfor %}
+              </ul>
+          {% endif %}
+      {% endwith %}
