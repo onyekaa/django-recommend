@@ -6,7 +6,7 @@ django_recommend
 
 Use ``pyrecommend`` in Django projects. 
 
-.. warning:: not yet suitable for production.
+**Warning:** not yet suitable for production.
 
 ``django_recommend/`` is the actual Django app intended for use in projects.
 
@@ -19,8 +19,13 @@ Quickstart
 * Add ``django_recommend`` to your ``INSTALLED_APPS``, and run
   ``python manage.py migrate``.
 
-* In your views, call ``django_recommend.set(user, object, score)`` to start
-  recording user scores. (Currently this is assumed to be implicit feedback).
+* Set ``SESSION_SAVE_EVERY_REQUEST=True`` in your settings, to ensure anonymous
+  users can be tracked.
+
+* In your views, call ``django_recommend.set_score(request, object, score)`` to
+  start recording user scores. (Currently this is assumed to be implicit
+  feedback.) **Note:** This will use session keys to store scores for users who
+  aren't authenticated.
 
 * In your templates, use ``{% load django_recommend %}`` and
   ``{{ obj|similar_objects }}`` to show similar objects to visitors. This
