@@ -10,6 +10,7 @@ from django.contrib.contenttypes import models as ct_models
 
 import django_recommend.storage
 import django_recommend.tasks
+import people.models
 import quotes.models
 import tests.utils
 
@@ -47,3 +48,21 @@ def test_autocalc(settings):
     args = tests.utils.get_call_args(
         django_recommend.tasks.update_similarity, update_sim.delay.call_args)
     assert args['obj_params'] == (quote.pk, quote_ctype.pk)
+
+
+@pytest.mark.django_db
+def test_multiple_dbs():
+    """update_similarity doesn't break with multiple DBs.
+
+    See https://code.djangoproject.com/ticket/16281
+
+    """
+    person = people.models.Person.objects.create(name='Jimmy Joe')
+    ctype = ct_models.ContentType.objects.get_for_model(person)
+
+    with mock.patch('pyrecommend.calculate_similarity') as calc_sim:
+        django_recommend.tasks.update_similarity((person.pk, ctype.pk))
+
+    args = tests.utils.get_call_args(
+        pyrecommend.calculate_similarity, calc_sim.call_args)
+    assert args['dataset'].obj == person

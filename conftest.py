@@ -17,13 +17,16 @@ def pytest_configure():
     sys.path.append(TESTPROJ_ROOT)
     settings.configure(
         RECOMMEND_ENABLE_AUTOCALC=False,
-        DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3'}},
+        DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3'},
+                   'second': {'ENGINE': 'django.db.backends.sqlite3'}},
         MIDDLEWARE_CLASSES=(),
+        DATABASE_ROUTERS=['people.routers.DatabaseRouter'],
         INSTALLED_APPS=(
             'django.contrib.auth',
             'django.contrib.contenttypes',
 
             'django_recommend',
 
+            'people',
             'quotes',
         ))
