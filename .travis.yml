@@ -6,3 +6,4 @@ script: tox
 branches:
   only:
     - master
+    - /^v\d.*$/  # Build releases, which get tagged e.g. v0.1.dev3
