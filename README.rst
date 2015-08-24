@@ -33,6 +33,7 @@ Quickstart
 
   .. code:: html+django
 
+      {% load django_recommend %}
       {% with similar_products as product|similar_objects %}
           {% if similiar_products %}
               <h2>Other users also liked:</h2>
