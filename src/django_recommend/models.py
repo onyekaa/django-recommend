@@ -44,6 +44,26 @@ class ObjectSimilarityQueryset(models.QuerySet):
 
         return [get_other_object(s) for s in self]
 
+    def __build_query(self, qset):
+        """Get a lookup to match qset objects as either object_1 or object_2.
+
+        qset is any Django queryset.
+
+        """
+        model = qset.model
+        ctype = ContentType.objects.get_for_model(model)
+
+        # Prevent cross-db joins
+        if qset.db != self.db:
+            ids = qset.values_list('id', flat=True)
+
+            # Forces the DB query to happen early
+            qset = list(ids)
+
+        lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
+                  (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
+        return lookup
+
     def exclude_objects(self, qset):
         """Exclude all similarities that include the given objects.
 
@@ -52,33 +72,17 @@ class ObjectSimilarityQueryset(models.QuerySet):
         ObjectSimilarity/UserScore themselves.
 
         """
-        model = qset.model
-        ctype = ContentType.objects.get_for_model(model)
-
-        # FIXME: duplicates code in django_recommend.__init__.similar_objects
-        lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
-                  (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
-        return self.exclude(lookup)
+        return self.exclude(self.__build_query(qset))
 
     def filter_objects(self, qset):
         """Find all similarities that include the given objects.
 
         qset is a queryset of model instances to include. These should be the
         types of objects stored in ObjectSimilarity/UserScore, **not**
-        ObjectSimilarity/UserScore themselves.       
+        ObjectSimilarity/UserScore themselves.
 
         """
-        model = qset.model
-        ctype = ContentType.objects.get_for_model(model)
-
-        # Prevent cross-db joins
-        if qset.db != self.db:
-            qset = list(qset.values_list('id', flat=True))
-
-        # FIXME: duplicates code in django_recommend.__init__.similar_objects
-        lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
-                  (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
-        return self.filter(lookup)
+        return self.filter(self.__build_query(qset))
 
 
 @python_2_unicode_compatible
