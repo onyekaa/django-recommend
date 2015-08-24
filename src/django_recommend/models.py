@@ -8,13 +8,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import signals as model_signals
+from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 
 
 NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
-class ObjectSimilarityQuerySet(models.QuerySet):
+class ObjectSimilarityQueryset(models.QuerySet):
     """The custom manager used for the ObjectSimilarity class."""
 
     def get_instances_for(self, obj):
@@ -43,6 +44,46 @@ class ObjectSimilarityQuerySet(models.QuerySet):
 
         return [get_other_object(s) for s in self]
 
+    def __build_query(self, qset):
+        """Get a lookup to match qset objects as either object_1 or object_2.
+
+        qset is any Django queryset.
+
+        """
+        model = qset.model
+        ctype = ContentType.objects.get_for_model(model)
+
+        # Prevent cross-db joins
+        if qset.db != self.db:
+            ids = qset.values_list('id', flat=True)
+
+            # Forces the DB query to happen early
+            qset = list(ids)
+
+        lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
+                  (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
+        return lookup
+
+    def exclude_objects(self, qset):
+        """Exclude all similarities that include the given objects.
+
+        qset is a queryset of model instances to exclude. These should be the
+        types of objects stored in ObjectSimilarity/UserScore, **not**
+        ObjectSimilarity/UserScore themselves.
+
+        """
+        return self.exclude(self.__build_query(qset))
+
+    def filter_objects(self, qset):
+        """Find all similarities that include the given objects.
+
+        qset is a queryset of model instances to include. These should be the
+        types of objects stored in ObjectSimilarity/UserScore, **not**
+        ObjectSimilarity/UserScore themselves.
+
+        """
+        return self.filter(self.__build_query(qset))
+
 
 @python_2_unicode_compatible
 class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
@@ -60,7 +101,7 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     # The actual similarity rating
     score = models.FloatField()
 
-    objects = ObjectSimilarityQuerySet.as_manager()
+    objects = ObjectSimilarityQueryset.as_manager()
 
     class Meta:
         index_together = (

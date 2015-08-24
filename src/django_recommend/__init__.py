@@ -11,7 +11,6 @@ def __user_from_request(req):
     """Get either the User object or session key from a request.
 
     Returns None for anonymous users with no session keys.
-
     """
     try:  # Requests have a .user object
         req.user
@@ -66,15 +65,7 @@ def similar_objects(obj):
 
     """
     from . import models
-    Q = django.db.models.Q  # pylint: disable=invalid-name
-
-    ctype = ct_models.ContentType.objects.get_for_model(obj)
-
-    lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id=obj.pk)) |
-              (Q(object_2_content_type=ctype) & Q(object_2_id=obj.pk)))
-
-    high_similarity = models.ObjectSimilarity.objects.filter(lookup)
-    high_similarity = high_similarity.order_by('-score').prefetch_related(
-        'object_1_content_type', 'object_2_content_type')
-
+    obj_qset = type(obj).objects.filter(pk=obj.pk)
+    high_similarity = models.ObjectSimilarity.objects.filter_objects(obj_qset)
+    high_similarity = high_similarity.order_by('-score')
     return high_similarity.get_instances_for(obj)
