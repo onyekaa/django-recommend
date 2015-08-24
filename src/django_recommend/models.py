@@ -71,6 +71,10 @@ class ObjectSimilarityQueryset(models.QuerySet):
         model = qset.model
         ctype = ContentType.objects.get_for_model(model)
 
+        # Prevent cross-db joins
+        if qset.db != self.db:
+            qset = list(qset.values_list('id', flat=True))
+
         # FIXME: duplicates code in django_recommend.__init__.similar_objects
         lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
                   (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
