@@ -109,6 +109,8 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
             ('object_2_id', 'object_2_content_type'),
         )
 
+        ordering = ['-score']
+
         unique_together = (
             'object_1_id', 'object_1_content_type', 'object_2_id',
             'object_2_content_type',

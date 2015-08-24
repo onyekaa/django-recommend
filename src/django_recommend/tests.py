@@ -70,6 +70,27 @@ class ObjectSimilarityTest(TestCase):
 
         self.assertEqual('1, 2: 4', get_unicode(sim))
 
+    def test_default_sort(self):
+        """Sorts by descending score by default."""
+        sim_a = models.ObjectSimilarity.objects.create(
+            object_1_id=1, object_1_content_type=self.ctype_a,
+            object_2_id=2, object_2_content_type=self.ctype_b,
+            score=4)
+        sim_b = models.ObjectSimilarity.objects.create(
+            object_1_id=1, object_1_content_type=self.ctype_a,
+            object_2_id=3, object_2_content_type=self.ctype_b,
+            score=6)
+
+        self.assertEqual([sim_b, sim_a],
+                         list(models.ObjectSimilarity.objects.all()))
+
+        sim_a.score, sim_b.score = sim_b.score, sim_a.score
+        sim_a.save()
+        sim_b.save()
+
+        self.assertEqual([sim_a, sim_b],
+                         list(models.ObjectSimilarity.objects.all()))
+
 
 class UserScoreTest(TestCase):
     """Tests for the UserRating model."""
