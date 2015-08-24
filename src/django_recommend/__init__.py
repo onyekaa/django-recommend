@@ -10,7 +10,7 @@ from django.contrib.contenttypes import models as ct_models
 def __user_from_request(req):
     """Get either the User object or session key from a request.
 
-    Returns None for anonymous users with no session keys.  
+    Returns None for anonymous users with no session keys.
     """
     try:  # Requests have a .user object
         req.user
@@ -64,6 +64,7 @@ def similar_objects(obj):
     Returns an iterator, not a collection.
 
     """
+    from . import models
     obj_qset = type(obj).objects.filter(pk=obj.pk)
     high_similarity = models.ObjectSimilarity.objects.filter_objects(obj_qset)
     high_similarity = high_similarity.order_by('-score')
