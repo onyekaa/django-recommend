@@ -14,6 +14,36 @@ from django.utils.encoding import python_2_unicode_compatible
 NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
+class ObjectSimilarityQuerySet(models.QuerySet):
+    """The custom manager used for the ObjectSimilarity class."""
+
+    def get_instances_for(self, obj):
+        """Get the instances in this queryset that are not `obj`.
+
+        Returns a list.
+
+        """
+        ctype = ContentType.objects.get_for_model(obj)
+
+        def get_object(sim_obj, num):
+            """So much boilerplate due to Django bug."""
+            prefix = 'object_{}_'.format(num)
+            target_id = getattr(sim_obj, prefix + 'id')
+            target_ctype = getattr(sim_obj, prefix + 'content_type')
+            return target_ctype.model_class().objects.get(pk=target_id)
+
+        def get_other_object(sim_obj):
+            """Get the object in sim_obj that isn't obj."""
+            same_id_as_1 = sim_obj.object_1_id == obj.pk
+            same_ctype_as_1 = sim_obj.object_1_content_type == ctype
+
+            if same_id_as_1 and same_ctype_as_1:
+                return get_object(sim_obj, 2)
+            return get_object(sim_obj, 1)
+
+        return [get_other_object(s) for s in self]
+
+
 @python_2_unicode_compatible
 class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     """Similarity between two Django objects."""
@@ -29,6 +59,8 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
 
     # The actual similarity rating
     score = models.FloatField()
+
+    objects = ObjectSimilarityQuerySet.as_manager()
 
     class Meta:
         index_together = (
