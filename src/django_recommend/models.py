@@ -60,6 +60,22 @@ class ObjectSimilarityQueryset(models.QuerySet):
                   (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
         return self.exclude(lookup)
 
+    def filter_objects(self, qset):
+        """Find all similarities that include the given objects.
+
+        qset is a queryset of model instances to include. These should be the
+        types of objects stored in ObjectSimilarity/UserScore, **not**
+        ObjectSimilarity/UserScore themselves.       
+
+        """
+        model = qset.model
+        ctype = ContentType.objects.get_for_model(model)
+
+        # FIXME: duplicates code in django_recommend.__init__.similar_objects
+        lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
+                  (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
+        return self.filter(lookup)
+
 
 @python_2_unicode_compatible
 class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
