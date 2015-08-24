@@ -73,3 +73,18 @@ def test_set_0_doesnt_create():
     assert not models.ObjectSimilarity.objects.filter(
         object_1_content_type=ctype, object_2_content_type=ctype,
         object_1_id=obj_a.id, object_2_id=obj_b.pk).exists()
+
+
+@pytest.mark.django_db
+def test_instance_list():
+    """Querysets/model managers have an instance_list method."""
+    set_score = models.ObjectSimilarity.set  # Just a readability alias
+    obj_a = make_quote('Hello')
+    obj_b = make_quote('World')
+    obj_c = make_quote('Foobar')
+    set_score(obj_a, obj_b, 1)
+    set_score(obj_a, obj_c, 2)
+
+    instances = models.ObjectSimilarity.objects.all().order_by(
+        'score').get_instances_for(obj_a)
+    assert [obj_b, obj_c] == list(instances)
