@@ -15,7 +15,7 @@ from django.utils.encoding import python_2_unicode_compatible
 NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
-class ObjectSimilarityQuerySet(models.QuerySet):
+class ObjectSimilarityQueryset(models.QuerySet):
     """The custom manager used for the ObjectSimilarity class."""
 
     def get_instances_for(self, obj):
@@ -77,7 +77,7 @@ class ObjectSimilarity(models.Model):  # pylint: disable=model-missing-unicode
     # The actual similarity rating
     score = models.FloatField()
 
-    objects = ObjectSimilarityQuerySet.as_manager()
+    objects = ObjectSimilarityQueryset.as_manager()
 
     class Meta:
         index_together = (
