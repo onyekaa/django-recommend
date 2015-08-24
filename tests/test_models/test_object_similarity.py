@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
 import pytest
 from django.contrib.contenttypes import models as ct_models
 
+import quotes.models
 from django_recommend import models
 from tests.utils import make_quote
 
@@ -88,3 +89,22 @@ def test_instance_list():
     instances = models.ObjectSimilarity.objects.all().order_by(
         'score').get_instances_for(obj_a)
     assert [obj_b, obj_c] == list(instances)
+
+
+@pytest.mark.django_db
+def test_exclude_objects_qset():
+    """ObjectSimilarity qset.exclude_objects can take a queryset."""
+    set_score = models.ObjectSimilarity.set  # Just a readability alias
+    obj_a = make_quote('Hello')
+    obj_b = make_quote('World')
+    obj_c = make_quote('Foo')
+    obj_d = make_quote('Bar')
+    sim_b = set_score(obj_a, obj_b, 1)
+    set_score(obj_a, obj_c, 2)
+    sim_d = set_score(obj_a, obj_d, 3)
+
+    sims = models.ObjectSimilarity.objects.all().order_by('score')
+    sims = sims.exclude_objects(
+        quotes.models.Quote.objects.filter(pk=obj_c.pk))
+
+    assert [sim_b, sim_d] == list(sims)

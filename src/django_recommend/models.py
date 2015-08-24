@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import signals as model_signals
+from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 
 
@@ -42,6 +43,22 @@ class ObjectSimilarityQuerySet(models.QuerySet):
             return get_object(sim_obj, 1)
 
         return [get_other_object(s) for s in self]
+
+    def exclude_objects(self, qset):
+        """Exclude all similarities that include the given objects.
+
+        qset is a queryset of model instances to exclude. These should be the
+        types of objects stored in ObjectSimilarity/UserScore, **not**
+        ObjectSimilarity/UserScore themselves.
+
+        """
+        model = qset.model
+        ctype = ContentType.objects.get_for_model(model)
+
+        # FIXME: duplicates code in django_recommend.__init__.similar_objects
+        lookup = ((Q(object_1_content_type=ctype) & Q(object_1_id__in=qset)) |
+                  (Q(object_2_content_type=ctype) & Q(object_2_id__in=qset)))
+        return self.exclude(lookup)
 
 
 @python_2_unicode_compatible
