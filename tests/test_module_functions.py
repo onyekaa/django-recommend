@@ -194,3 +194,20 @@ def test_set_score_anon_request(client, some_quote, some_other_quote):
 
     django_recommend.set_score(req, some_other_quote, 242)
     assert django_recommend.get_score(req, some_other_quote) == 242
+
+
+@pytest.mark.django_db
+def test_similar_to():
+    """similar_to is like similar_objects but returns a queryset."""
+    quote_a = make_quote('foo')
+    quote_b = make_quote('bar')
+    quote_c = make_quote('baz')
+    sim_ab = django_recommend.models.ObjectSimilarity.set(quote_a, quote_b, 10)
+    sim_ac = django_recommend.models.ObjectSimilarity.set(quote_a, quote_c, 5)
+
+    sim_quotes = django_recommend.similar_to(quote_a)
+    assert list(sim_quotes) == [sim_ab, sim_ac]
+
+    sim_quotes = sim_quotes.exclude_objects(
+        quotes.models.Quote.objects.filter(pk=quote_b.pk))
+    assert list(sim_quotes) == [sim_ac]

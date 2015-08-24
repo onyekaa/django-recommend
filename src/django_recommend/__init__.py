@@ -64,8 +64,18 @@ def similar_objects(obj):
     Returns an iterator, not a collection.
 
     """
+    return similar_to(obj).get_instances_for(obj)
+
+
+def similar_to(obj):
+    """Get a queryset of similarity scores most similar to obj.
+
+    This can allow you to use methods of the ObjectSimilarityQueryset, such as
+    exclude_objects, as well as normal queryset slicing.
+
+    """
     from . import models
     obj_qset = type(obj).objects.filter(pk=obj.pk)
     high_similarity = models.ObjectSimilarity.objects.filter_objects(obj_qset)
     high_similarity = high_similarity.order_by('-score')
-    return high_similarity.get_instances_for(obj)
+    return high_similarity
