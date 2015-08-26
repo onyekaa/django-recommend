@@ -15,6 +15,12 @@ LOG = logging.getLogger(__name__)
 NO_SESSION_KEY = object()
 
 
+BLANK_SESSION_WARNING = (
+    "Can't track score: anonymous user has no session key. Do you need to set"
+    ' SESSION_SAVE_EVERY_REQUEST=True ?'
+)
+
+
 def __user_from_request(req):
     """Get either the User object or session key from a request.
 
@@ -39,9 +45,7 @@ def set_score(request_or_user, obj, score):
     from . import models
     user = __user_from_request(request_or_user)
     if user is NO_SESSION_KEY:
-        msg = ("Can't track score: anonymous user has no session key. Do you "
-               'need to set SESSION_SAVE_EVERY_REQUEST=True ?')
-        LOG.warning(msg)
+        LOG.warning(BLANK_SESSION_WARNING)
     else:
         return models.UserScore.set(user, obj, score)
 
@@ -55,7 +59,10 @@ def setdefault_score(request_or_user, obj, score):
     """
     from . import models
     user = __user_from_request(request_or_user)
-    return models.UserScore.setdefault(user, obj, score)
+    if user is NO_SESSION_KEY:
+        LOG.warning(BLANK_SESSION_WARNING)
+    else:
+        return models.UserScore.setdefault(user, obj, score)
 
 
 def scores_for(obj):

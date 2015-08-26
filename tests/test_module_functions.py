@@ -231,3 +231,21 @@ def test_set_score_blank_session(client):
     msg = ("Can't track score: anonymous user has no session key. Do you need "
            'to set SESSION_SAVE_EVERY_REQUEST=True ?')
     logs.check(('django_recommend', 'WARNING', msg))
+
+
+@pytest.mark.django_db
+def test_setdefault_score_session(client):
+    """setdefault_score() just logs a warning with a blank session."""
+    bogus = object()  # Object shouldn't matter/need to be a Django model
+    request = client.get('/url-doesnt-matter').wsgi_request
+    blank_session = mock.patch.object(type(request.session), 'session_key', '')
+
+    with testfixtures.LogCapture() as logs, blank_session:
+        django_recommend.setdefault_score(request, bogus, 3)
+
+    # By this point it is clear no database saving happened, because
+    # attempting to associate anything with non-orm bogus object will crash.
+
+    msg = ("Can't track score: anonymous user has no session key. Do you need "
+           'to set SESSION_SAVE_EVERY_REQUEST=True ?')
+    logs.check(('django_recommend', 'WARNING', msg))
