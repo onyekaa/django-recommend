@@ -4,7 +4,9 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import mock
 import pytest
+import testfixtures
 from django.contrib.auth.models import User
 
 import django_recommend.models
@@ -211,3 +213,39 @@ def test_similar_to():
     sim_quotes = sim_quotes.exclude_objects(
         quotes.models.Quote.objects.filter(pk=quote_b.pk))
     assert list(sim_quotes) == [sim_ac]
+
+
+@pytest.mark.django_db
+def test_set_score_blank_session(client):
+    """set_score() just logs a warning with a blank session."""
+    bogus = object()  # Object shouldn't matter/need to be a Django model
+    request = client.get('/url-doesnt-matter').wsgi_request
+    blank_session = mock.patch.object(type(request.session), 'session_key', '')
+
+    with testfixtures.LogCapture() as logs, blank_session:
+        django_recommend.set_score(request, bogus, 3)
+
+    # By this point it is clear no database saving happened, because
+    # attempting to associate anything with non-orm bogus object will crash.
+
+    msg = ("Can't track score: anonymous user has no session key. Do you need "
+           'to set SESSION_SAVE_EVERY_REQUEST=True ?')
+    logs.check(('django_recommend', 'WARNING', msg))
+
+
+@pytest.mark.django_db
+def test_setdefault_score_session(client):
+    """setdefault_score() just logs a warning with a blank session."""
+    bogus = object()  # Object shouldn't matter/need to be a Django model
+    request = client.get('/url-doesnt-matter').wsgi_request
+    blank_session = mock.patch.object(type(request.session), 'session_key', '')
+
+    with testfixtures.LogCapture() as logs, blank_session:
+        django_recommend.setdefault_score(request, bogus, 3)
+
+    # By this point it is clear no database saving happened, because
+    # attempting to associate anything with non-orm bogus object will crash.
+
+    msg = ("Can't track score: anonymous user has no session key. Do you need "
+           'to set SESSION_SAVE_EVERY_REQUEST=True ?')
+    logs.check(('django_recommend', 'WARNING', msg))
