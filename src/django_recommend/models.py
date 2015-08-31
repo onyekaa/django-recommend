@@ -16,7 +16,7 @@ from django.utils.encoding import python_2_unicode_compatible
 NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
-def reraise_exception(*args):  # pylint: disable=unused-argument
+def raise_exception(*args):  # pylint: disable=unused-argument
     """An error 'handler' which just propagates the error."""
     pass  # TODO: test this is used
 
@@ -24,19 +24,19 @@ def reraise_exception(*args):  # pylint: disable=unused-argument
 class ObjectSimilarityQueryset(models.QuerySet):
     """The custom manager used for the ObjectSimilarity class."""
 
-    def get_instances_for(self, obj, error_handler=reraise_exception):
+    def get_instances_for(self, obj, when_missing=raise_exception):
         """Get the instances in this queryset that are not `obj`.
 
         Returns a list.
 
-        error_handler:
-            a function that will be called if an instance cannot be retrieved.
-            It will be called with the content type ID and object ID of the
-            object that failed to be retrieved. By default, this simply raises
-            the underyling exception.
+        when_missing:
+            a callback function to execute when an instance that should be
+            suggested is not present in the database (i.e. get() raises
+            ObjectDoesNotExist). This function will be called with two
+            parameters: the content type id, and the object id.
 
-            This may be caused by either ObjectDoesNotExist or
-            MultipleObjectsReturned, depending on your database setup.
+            The default callback propagates the underlying ObjectDoesNotExist
+            exception.
 
         """
         ctype = ContentType.objects.get_for_model(obj)
@@ -67,7 +67,7 @@ class ObjectSimilarityQueryset(models.QuerySet):
             try:
                 inst = get_object_from_ctype(other_ctype, other_pk)
             except exceptions.ObjectDoesNotExist:
-                error_handler(other_ctype.pk, other_pk)
+                when_missing(other_ctype.pk, other_pk)
             else:
                 instances.append(inst)
         return instances

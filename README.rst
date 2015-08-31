@@ -12,6 +12,9 @@ Use ``pyrecommend`` in Django projects.
 
 ``simplerec/`` is a Django project used for testing.
 
+**Important note:** Model classes/database schemas are only supported if they
+have unique integer primary keys.
+
 
 Quickstart
 ----------
