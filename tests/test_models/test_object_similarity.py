@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import mock
 import pytest
 from django.contrib.contenttypes import models as ct_models
 
@@ -129,3 +130,25 @@ def test_filter_objects():
     sims = sims.order_by('score')
 
     assert [sim_ab, sim_ac, sim_ad] == list(sims)
+
+
+@pytest.mark.django_db
+def test_get_instances_fallback():
+    """get_instances_for uses a callback when an instance is missing."""
+    set_score = models.ObjectSimilarity.set  # Just a readability alias
+    obj_a = make_quote('Hello')
+    obj_b = make_quote('World')
+    obj_c = make_quote('Foobar')
+    ctype = ct_models.ContentType.objects.get_for_model(obj_a)
+    set_score(obj_a, obj_b, 1)
+    set_score(obj_a, obj_c, 2)
+    obj_b_pk = obj_b.pk  # .pk gets set to None after delete()
+    obj_b.delete()
+    handle_missing = mock.MagicMock()
+
+    objs = models.ObjectSimilarity.objects.all().order_by(
+        'score').get_instances_for(obj_a, handle_missing)
+
+    assert 1 == handle_missing.call_count
+    assert mock.call(ctype.pk, obj_b_pk) == handle_missing.call_args
+    assert [obj_c] == list(objs)
