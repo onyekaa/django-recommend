@@ -8,6 +8,7 @@ import mock
 import pytest
 import testfixtures
 from django.contrib.auth.models import User
+from django.contrib.contenttypes import models as ct_models
 
 import django_recommend.models
 import people.models
@@ -249,3 +250,28 @@ def test_setdefault_score_session(client):
     msg = ("Can't track score: anonymous user has no session key. Do you need "
            'to set SESSION_SAVE_EVERY_REQUEST=True ?')
     logs.check(('django_recommend', 'WARNING', msg))
+
+
+@pytest.mark.django_db
+def test_forget_object():
+    """forget_object() will delete all similarity data for objects."""
+    make_quote = quotes.models.Quote.objects.create
+    obj_a = make_quote(content='Hello')
+    obj_b = make_quote(content='World')
+    obj_c = make_quote(content='Foobar')
+    django_recommend.set_score('foo', obj_a, 1)
+    django_recommend.set_score('foo', obj_b, 1)
+    django_recommend.set_score('foo', obj_c, 1)
+    ctype = ct_models.ContentType.objects.get_for_model(obj_a)
+    django_recommend.tasks.update_similarity((obj_a.pk, ctype.pk))
+    ctype = ct_models.ContentType.objects.get_for_model(obj_b)
+    obj_b_pk = obj_b.pk  # .pk gets set to None after delete()
+    obj_b.delete()
+    obj_b.pk = obj_b_pk
+
+    django_recommend.forget_object(ctype.pk, obj_b_pk)
+
+    assert 1 == django_recommend.models.ObjectSimilarity.objects.count()
+    assert 2 == django_recommend.models.UserScore.objects.count()
+    assert 0 == django_recommend.get_score('foo', obj_b)
+    assert [obj_c] == django_recommend.similar_objects(obj_a)

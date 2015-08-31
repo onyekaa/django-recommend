@@ -99,3 +99,20 @@ def similar_to(obj):
     high_similarity = models.ObjectSimilarity.objects.filter_objects(obj_qset)
     high_similarity = high_similarity.order_by('-score')
     return high_similarity
+
+
+def forget_object(obj_content_type, obj_id):
+    """Remove all information about a given object.
+
+    Deletes both UserScore objects and ObjectSimilarity objects.
+
+    """
+    from django.db.models import Q
+    from . import models
+    models.UserScore.objects.filter(
+        object_id=obj_id, object_content_type=obj_content_type
+    ).delete()
+    models.ObjectSimilarity.objects.filter(
+        Q(object_1_content_type=obj_content_type, object_1_id=obj_id) |
+        Q(object_2_content_type=obj_content_type, object_2_id=obj_id)
+    ).delete()
