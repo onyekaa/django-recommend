@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core import exceptions
 from django.db import models
 from django.db.models import signals as model_signals
 from django.db.models import Q
@@ -15,34 +16,61 @@ from django.utils.encoding import python_2_unicode_compatible
 NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
+def raise_exception(*args):  # pylint: disable=unused-argument
+    """An error 'handler' which just propagates the error."""
+    raise
+
+
 class ObjectSimilarityQueryset(models.QuerySet):
     """The custom manager used for the ObjectSimilarity class."""
 
-    def get_instances_for(self, obj):
+    def get_instances_for(self, obj, when_missing=raise_exception):
         """Get the instances in this queryset that are not `obj`.
 
         Returns a list.
 
+        when_missing:
+            a callback function to execute when an instance that should be
+            suggested is not present in the database (i.e. get() raises
+            ObjectDoesNotExist). This function will be called with two
+            parameters: the content type id, and the object id.
+
+            The default callback propagates the underlying ObjectDoesNotExist
+            exception.
+
         """
         ctype = ContentType.objects.get_for_model(obj)
 
-        def get_object(sim_obj, num):
-            """So much boilerplate due to Django bug."""
+        def get_object_from_ctype(contenttype, target_id):
+            """The builtin method of doing this breaks with multiple DBs."""
+            return contenttype.model_class().objects.get(pk=target_id)
+
+        def get_object_params(sim_obj, num):
+            """Get the content_type and PK of an object from sim_obj."""
             prefix = 'object_{}_'.format(num)
             target_id = getattr(sim_obj, prefix + 'id')
             target_ctype = getattr(sim_obj, prefix + 'content_type')
-            return target_ctype.model_class().objects.get(pk=target_id)
+            return target_ctype, target_id
 
-        def get_other_object(sim_obj):
-            """Get the object in sim_obj that isn't obj."""
+        def get_other_object_params(sim_obj):
+            """Get the content type and pk of the other object in sim_obj."""
             same_id_as_1 = sim_obj.object_1_id == obj.pk
             same_ctype_as_1 = sim_obj.object_1_content_type == ctype
 
             if same_id_as_1 and same_ctype_as_1:
-                return get_object(sim_obj, 2)
-            return get_object(sim_obj, 1)
+                return get_object_params(sim_obj, 2)
+            return get_object_params(sim_obj, 1)
 
-        return [get_other_object(s) for s in self]
+        instances = []
+        for sim in self:
+            other_ctype, other_pk = get_other_object_params(sim)
+            try:
+                inst = get_object_from_ctype(other_ctype, other_pk)
+            except exceptions.ObjectDoesNotExist:
+                when_missing(other_ctype.pk, other_pk)
+            else:
+                instances.append(inst)
+        return instances
 
     def __build_query(self, qset):
         """Get a lookup to match qset objects as either object_1 or object_2.
