@@ -18,7 +18,7 @@ NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 def raise_exception(*args):  # pylint: disable=unused-argument
     """An error 'handler' which just propagates the error."""
-    pass  # TODO: test this is used
+    raise
 
 
 class ObjectSimilarityQueryset(models.QuerySet):
