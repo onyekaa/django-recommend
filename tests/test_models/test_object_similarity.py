@@ -155,16 +155,14 @@ def test_get_instances_fallback():
 
 
 @pytest.mark.django_db
-def test_get_instances_missing_default():
+def test_get_instances_default():
     """get_instances_for propagates ObjectDoesNotExist without a handler."""
     set_score = models.ObjectSimilarity.set  # Just a readability alias
     obj_a = make_quote('Hello')
     obj_b = make_quote('World')
     obj_c = make_quote('Foobar')
-    ctype = ct_models.ContentType.objects.get_for_model(obj_a)
     set_score(obj_a, obj_b, 1)
     set_score(obj_a, obj_c, 2)
-    obj_b_pk = obj_b.pk  # .pk gets set to None after delete()
     obj_b.delete()
 
     with pytest.raises(quotes.models.Quote.DoesNotExist):
