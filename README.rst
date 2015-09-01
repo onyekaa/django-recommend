@@ -61,7 +61,7 @@ kind of functionality will be put into a future version.
 If your data is ever deleted, by default, `django_recommend` will attempt to
 delete all recommendation information about it at the next available chance.
 This most notably can occur in `ObjectSimilarityQueryset.get_instances_for`,
-where you may, for example, have a queryset like:
+where you may, for example, have a queryset like::
 
     suggested_books = similar_books.order_by(
         '-score')[:5].get_instances_for(curr_book)
