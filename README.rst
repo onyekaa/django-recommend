@@ -47,3 +47,32 @@ Quickstart
               </ul>
           {% endif %}
       {% endwith %}
+
+
+
+Notes
+-----
+
+There can be some potentially confusing behavior from this library if your
+application involves objects that get deleted/deactivated. Currently I am not
+sure how feasible it is to filter by a flag like 'deactivated'; tests for that
+kind of functionality will be put into a future version.
+
+If your data is ever deleted, by default, `django_recommend` will attempt to
+delete all recommendation information about it at the next available chance.
+This most notably can occur in `ObjectSimilarityQueryset.get_instances_for`,
+where you may, for example, have a queryset like:
+
+    suggested_books = similar_books.order_by(
+        '-score')[:5].get_instances_for(curr_book)
+
+If one of the books that *would* be suggested for this book has since been
+deleted, the default behavior will be to in fact give you a list of *four*
+instances. This is because retrieving the deleted instances raises an
+`ObjectDoesNotExist` error in the Django ORM; the default behavior is to
+simply delete that object's information from the recommendation data and skip
+the object for now.
+
+This can be controlled by the `RECOMMEND_PURGE_MISSING_DATA` boolean setting.
+If this is `False`, the exception will be propagated, so you may handle it in a
+different way.
