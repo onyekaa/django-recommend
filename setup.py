@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name='django-recommend',
-    version='0.1.dev6',
+    version='0.1.dev7',
     author='Dan Passaro',
     author_email='danpassaro@gmail.com',
     description='Generate recommendations in Django.',
