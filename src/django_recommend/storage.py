@@ -42,7 +42,6 @@ class ObjectData(object):  # pylint: disable=too-few-public-methods
 
     def __getitem__(self, item):
         """Get all scores for a particular object."""
-        import django_recommend  # HACK: scores_for should be moved
         return django_recommend.scores_for(item)
 
     def __iter__(self):
