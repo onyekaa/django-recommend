@@ -3,9 +3,12 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+import django.db.models
 import pytest
+from django.contrib.contenttypes import models as ct_models
 
 import django_recommend.storage
+import django_recommend.tasks
 import quotes.models
 import people.models
 from tests.utils import make_quote
@@ -75,12 +78,40 @@ def test_data_multiple_dbs():
 
 
 @pytest.mark.django_db
-def test_missing_nopurge():
+def test_missing_nopurge(settings):
     """Raises exceptions when purge is not set."""
     quote = sample_data()
     quote[2].delete()
+    settings.RECOMMEND_PURGE_MISSING_DATA = False
 
     obj_data = django_recommend.storage.ObjectData(quote[1])
 
     with pytest.raises(quotes.models.Quote.DoesNotExist):
         obj_data.keys()
+
+
+@pytest.mark.django_db
+def test_missing_purge(settings):
+    """Deletes similarity data when purge is set."""
+    Q = django.db.models.Q  # pylint: disable=invalid-name
+    quote = sample_data()
+    ctype = ct_models.ContentType.objects.get_for_model(quote[2])
+    django_recommend.tasks.update_similarity((quote[1].pk, ctype.pk))
+    quote_2_id = quote[2].pk
+    quote[2].delete()
+    assert 2 == django_recommend.models.UserScore.objects.filter(
+        object_content_type=ctype, object_id=quote_2_id).count()
+    assert 1 == django_recommend.models.ObjectSimilarity.objects.filter(
+        Q(object_1_content_type=ctype, object_1_id=quote_2_id) |
+        Q(object_2_content_type=ctype, object_2_id=quote_2_id)).count()
+    settings.RECOMMEND_PURGE_MISSING_DATA = True
+
+    obj_data = django_recommend.storage.ObjectData(quote[1])
+    keys = obj_data.keys()
+
+    assert [quote[1]] == keys
+    assert 0 == django_recommend.models.UserScore.objects.filter(
+        object_content_type=ctype, object_id=quote_2_id).count()
+    assert 0 == django_recommend.models.ObjectSimilarity.objects.filter(
+        Q(object_1_content_type=ctype, object_1_id=quote_2_id) |
+        Q(object_2_content_type=ctype, object_2_id=quote_2_id)).count()

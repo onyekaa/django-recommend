@@ -11,6 +11,8 @@ class DefaultSettingsProxy(object):  # pylint: disable=too-few-public-methods
 
     RECOMMEND_ENABLE_AUTOCALC = True
 
+    RECOMMEND_PURGE_MISSING_DATA = True
+
     RECOMMEND_USE_CELERY = True
 
     def __getattribute__(self, attr_name):

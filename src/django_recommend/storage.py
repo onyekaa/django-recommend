@@ -5,8 +5,11 @@ from __future__ import (absolute_import, division, print_function,
 
 import logging
 
+import django.core.exceptions
 from django.contrib.contenttypes import models as ct_models
 
+import django_recommend
+from . import conf
 from . import models
 
 
@@ -57,4 +60,11 @@ class ObjectData(object):  # pylint: disable=too-few-public-methods
             'object_content_type', 'object_id'
         ).distinct()
 
-        return (get_object(*args) for args in relevant_objects)
+        for args in relevant_objects:
+            try:
+                yield get_object(*args)
+            except django.core.exceptions.ObjectDoesNotExist:
+                if conf.settings.RECOMMEND_PURGE_MISSING_DATA:
+                    django_recommend.forget_object(*args)
+                else:
+                    raise
