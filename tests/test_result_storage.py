@@ -4,11 +4,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import pytest
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import models as ct_models
 
-from django_recommend.models import ObjectSimilarity
-from django_recommend.storage import ResultStorage
-
+import django_recommend.models
+import django_recommend.storage
 import quotes.models
 
 
@@ -20,15 +19,15 @@ def test_store_results():
     # Specify PKs so quote_a will be object_1
     quote_a = make_quote(content='Hello', pk=20)
     quote_b = make_quote(content='World', pk=25)
-    ctype = ContentType.objects.get_for_model(quote_a)
+    ctype = ct_models.ContentType.objects.get_for_model(quote_a)
 
-    assert not ObjectSimilarity.objects.filter(
+    assert not django_recommend.models.ObjectSimilarity.objects.filter(
         object_1_id=quote_a.pk, object_1_content_type=ctype,
         object_2_id=quote_b.pk, object_2_content_type=ctype).exists()
 
-    storage = ResultStorage()
+    storage = django_recommend.storage.ResultStorage()
     storage[(quote_a, quote_b)] = 5
 
-    assert ObjectSimilarity.objects.filter(
+    assert django_recommend.models.ObjectSimilarity.objects.filter(
         object_1_id=quote_a.pk, object_1_content_type=ctype,
         object_2_id=quote_b.pk, object_2_content_type=ctype).exists()
