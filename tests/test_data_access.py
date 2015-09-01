@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
 import pytest
 
 import django_recommend.storage
+import quotes.models
 import people.models
 from tests.utils import make_quote
 
@@ -71,3 +72,15 @@ def test_data_multiple_dbs():
     data = django_recommend.storage.ObjectData(ryan)
 
     assert set(data) == {ryan, toby}
+
+
+@pytest.mark.django_db
+def test_missing_nopurge():
+    """Raises exceptions when purge is not set."""
+    quote = sample_data()
+    quote[2].delete()
+
+    obj_data = django_recommend.storage.ObjectData(quote[1])
+
+    with pytest.raises(quotes.models.Quote.DoesNotExist):
+        obj_data.keys()
