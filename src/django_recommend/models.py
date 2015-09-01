@@ -12,19 +12,30 @@ from django.db.models import signals as model_signals
 from django.db.models import Q
 from django.utils.encoding import python_2_unicode_compatible
 
+import django_recommend
+from . import conf
+
 
 NO_RELATED_NAME = '+'  # Try to clarify obscure Django syntax.
 
 
-def raise_exception(*args):  # pylint: disable=unused-argument
-    """An error 'handler' which just propagates the error."""
-    raise
+def respect_purge_setting(*args):
+    """Raise or delete related objects based on settings.
+
+    This is a when_missing handler for
+    ObjectSimilarityQueryset.get_instances_for.
+
+    """
+    if conf.settings.RECOMMEND_PURGE_MISSING_DATA:
+        django_recommend.forget_object(*args)
+    else:
+        raise
 
 
 class ObjectSimilarityQueryset(models.QuerySet):
     """The custom manager used for the ObjectSimilarity class."""
 
-    def get_instances_for(self, obj, when_missing=raise_exception):
+    def get_instances_for(self, obj, when_missing=respect_purge_setting):
         """Get the instances in this queryset that are not `obj`.
 
         Returns a list.
@@ -37,6 +48,12 @@ class ObjectSimilarityQueryset(models.QuerySet):
 
             The default callback propagates the underlying ObjectDoesNotExist
             exception.
+
+            If this method does not raise an exception, the triggering object
+            is simply ignored and not included in the result list. For this
+            reason it's possible for a queryset of 5 objects to only return,
+            say, 4 instances, if one of the objects referred to in an
+            ObjectSimilarity is in fact no longer present in the database.
 
         """
         ctype = ContentType.objects.get_for_model(obj)

@@ -64,16 +64,21 @@ def signal_handler(**kwargs):
 def update_similarity(obj_params):
     """Update similarity scores for object and all related objects.
 
-    obj_params: a tuple of (object_id, object_content_type_id).
+    obj_params:
+        A tuple of (object_id, object_content_type_id).
+        May also be a single model instance, instead.
 
     """
     LOG.info('Calculating simlarity for %s', obj_params)
-    obj_id, ctype_id = obj_params
-    content_type = ct_models.ContentType.objects.get(pk=ctype_id)
-    obj = content_type.model_class().objects.get(pk=obj_id)
+    try:
+        obj_id, ctype_id = obj_params
+    except TypeError:  # Not iterable, must be a Django obj
+        obj = obj_params
+    else:
+        content_type = ct_models.ContentType.objects.get(pk=ctype_id)
+        obj = content_type.model_class().objects.get(pk=obj_id)
+
     obj_data = storage.ObjectData(obj)
-
     sim_func = pyrecommend.similarity.dot_product
-
-    pyrecommend.calculate_similarity(obj_data, sim_func,
-                                     storage.ResultStorage())
+    pyrecommend.calculate_similarity(
+        obj_data, sim_func, storage.ResultStorage())
