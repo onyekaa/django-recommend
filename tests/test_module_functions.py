@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes import models as ct_models
 
 import django_recommend.models
+import django_recommend.tasks
 import people.models
 import quotes.models
 from tests.utils import make_quote
@@ -275,3 +276,14 @@ def test_forget_object():
     assert 2 == django_recommend.models.UserScore.objects.count()
     assert 0 == django_recommend.get_score('foo', obj_b)
     assert [obj_c] == django_recommend.similar_objects(obj_a)
+
+
+@pytest.mark.django_db
+def test_forget_object_missing():
+    """forget_object() will not break if the object to forget is gone."""
+    assert 0 == django_recommend.models.UserScore.objects.count()
+    assert 0 == django_recommend.models.ObjectSimilarity.objects.count()
+
+    django_recommend.forget_object(5, 6)  # Just make up some IDs
+
+    # Didn't raise an exception? Test success!
