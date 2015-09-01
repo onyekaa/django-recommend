@@ -7,6 +7,7 @@ import mock
 import pytest
 from django.contrib.contenttypes import models as ct_models
 
+import django_recommend.tasks
 import quotes.models
 from django_recommend import models
 from tests.utils import make_quote
@@ -155,8 +156,9 @@ def test_get_instances_fallback():
 
 
 @pytest.mark.django_db
-def test_get_instances_default():
+def test_get_instances_nopurge(settings):
     """get_instances_for propagates ObjectDoesNotExist without a handler."""
+    settings.RECOMMEND_PURGE_MISSING_DATA = False
     set_score = models.ObjectSimilarity.set  # Just a readability alias
     obj_a = make_quote('Hello')
     obj_b = make_quote('World')
@@ -168,3 +170,23 @@ def test_get_instances_default():
     with pytest.raises(quotes.models.Quote.DoesNotExist):
         models.ObjectSimilarity.objects.all().order_by(
             'score').get_instances_for(obj_a)
+
+
+@pytest.mark.django_db
+def test_get_instances_purge(settings):
+    """get_instances_for deletes missing data when purge is set."""
+    settings.RECOMMEND_PURGE_MISSING_DATA = True
+    obj_a = make_quote('Hello')
+    obj_b = make_quote('World')
+    django_recommend.set_score('foo', obj_a, 1)
+    django_recommend.set_score('foo', obj_b, 2)
+    django_recommend.tasks.update_similarity(obj_a)
+    obj_b.delete()
+    assert 2 == django_recommend.models.UserScore.objects.count()
+    assert 1 == django_recommend.models.ObjectSimilarity.objects.count()
+
+    models.ObjectSimilarity.objects.all().order_by(
+        'score').get_instances_for(obj_a)
+
+    assert 1 == django_recommend.models.UserScore.objects.count()
+    assert 0 == django_recommend.models.ObjectSimilarity.objects.count()
