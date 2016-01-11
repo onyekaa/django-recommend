@@ -6,7 +6,6 @@ from __future__ import (absolute_import, division, print_function,
 import logging
 
 import django.db.models
-from django.contrib.contenttypes import models as ct_models
 
 
 LOG = logging.getLogger(__name__)

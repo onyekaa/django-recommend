@@ -2,4 +2,5 @@ django
 django-bower
 django-extensions
 pyrecommend
+psycopg2
 -e ..
