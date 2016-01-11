@@ -22,7 +22,11 @@ setup(
     long_description=read('README.rst'),
 
     package_dir={'': 'src'},
-    packages=['django_recommend', 'django_recommend.templatetags'],
+    packages=[
+        'django_recommend',
+        'django_recommend.migrations',
+        'django_recommend.templatetags',
+    ],
     install_requires=['django', 'pyrecommend'],
     setup_requires=['wheel'],
 )
